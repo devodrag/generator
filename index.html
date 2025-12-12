@@ -16,20 +16,28 @@
             overflow-x: hidden; margin: 0;
         }
 
-        /* --- 1. PAGE TRANSITION (Router) --- */
-        .page-transition { 
-            animation: slideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; /* Более плавный In-Out */
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(20px); filter: blur(4px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        /* --- 1. PAGE TRANSITION (Router) - Улучшено: плавный Fade-In-Out --- */
+        #content {
+            transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out, filter 0.25s ease-in-out;
         }
         
+        .page-enter {
+            opacity: 0; 
+            transform: translateY(20px); 
+            filter: blur(4px);
+        }
+        
+        .page-enter.active {
+            opacity: 1; 
+            transform: translateY(0); 
+            filter: blur(0);
+        }
+
+
         /* --- 2. HAMMER EFFECT (Generation Result) --- */
         .hammer-char {
             display: inline-block; 
             opacity: 0; 
-            /* Смещение по Y для эффекта "вылетает снизу" */
             transform: translateY(5px) scale(0.98); 
             animation: softIn 0.3s cubic-bezier(0.2, 0.6, 0.3, 1) forwards;
         }
@@ -46,14 +54,14 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 2.5rem;
-            transition: all 0.3s ease; /* Добавляем transition на карточку */
+            transition: all 0.3s ease;
         }
 
         .btn-hover {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .btn-hover:hover { background: #fff; color: #000; transform: translateY(-3px) scale(1.01); } /* Более выраженный hover */
+        .btn-hover:hover { background: #fff; color: #000; transform: translateY(-3px) scale(1.01); }
         
         /* Snowflakes */
         .snowflake { position: fixed; background: white; border-radius: 50%; pointer-events: none; opacity: 0.1; }
@@ -110,7 +118,7 @@
             margin-top: 5px;
             max-height: 200px;
             overflow-y: auto;
-            animation: fadeIn 0.3s ease-out; /* Анимация появления списка */
+            animation: fadeIn 0.3s ease-out;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-5px); }
@@ -147,7 +155,7 @@
     </nav>
 
     <main class="flex-grow flex items-center justify-center p-6">
-        <div id="content" class="w-full max-w-xl page-transition"></div>
+        <div id="content" class="w-full max-w-xl page-enter"></div>
     </main>
 
     <script>
@@ -183,16 +191,15 @@
             { code: 'mir', name: 'MIR' }
         ];
 
-        // --- CORE FUNCTIONS ---
+        // --- CORE FUNCTIONS: ROUTER FIX ---
         function router(path) {
             const content = document.getElementById('content');
-            // 1. Анимация исчезновения
-            content.style.opacity = '0';
-            content.style.transform = 'translateY(-10px)'; // Небольшой сдвиг вверх при исчезновении
-            content.style.filter = 'blur(4px)';
-            content.classList.remove('page-transition');
+            
+            // 1. Начинаем анимацию исчезновения (fade-out)
+            content.classList.remove('active'); 
 
             setTimeout(() => {
+                // 2. Смена контента, пока он не виден (после fade-out)
                 const map = {
                     'number': renderNumber, 'pass': renderPass, 'id': renderID,
                     'morse': renderMorse, 'qr': renderQR, 'ball': renderBall, 
@@ -200,21 +207,19 @@
                 };
                 content.innerHTML = map[path] ? map[path]() : renderHome();
                 
-                // 2. Активация анимации появления
-                void content.offsetWidth;
-                content.classList.add('page-transition');
-                content.style.opacity = '1';
-                content.style.transform = 'translateY(0)';
-                content.style.filter = 'blur(0)';
-                
-                // Initialize custom selects based on the loaded view
-                if (path === 'translate') {
-                    initCustomSelect('fromLangSelect');
-                    initCustomSelect('toLangSelect');
-                } else if (path === 'cards') {
-                    initCustomSelect('cardTypeSelect');
-                }
-            }, 250); // Время, соответствующее половине анимации (0.5s / 2)
+                // 3. Запускаем анимацию появления (fade-in) на следующем кадре
+                setTimeout(() => {
+                    content.classList.add('active');
+                    
+                    // 4. Инициализация кастомных селекторов
+                    if (path === 'translate') {
+                        initCustomSelect('fromLangSelect');
+                        initCustomSelect('toLangSelect');
+                    } else if (path === 'cards') {
+                        initCustomSelect('cardTypeSelect');
+                    }
+                }, 10); // Небольшая задержка, чтобы браузер успел увидеть смену контента
+            }, 250); // Время должно совпадать со временем transition в CSS (#content)
         }
 
         // Анимация текста
@@ -224,7 +229,7 @@
                 const s = document.createElement('span');
                 s.innerHTML = c === ' ' ? '&nbsp;' : c;
                 s.className = 'hammer-char';
-                s.style.animationDelay = `${i * 0.02}s`; // Ускоряем задержку
+                s.style.animationDelay = `${i * 0.02}s`;
                 el.appendChild(s);
             });
         }
@@ -235,7 +240,6 @@
             if (text === "..." || text === "****" || text === "Awaiting Input" || text === "Encrypted Result" || text === "Translation Result" || text.startsWith("Error:")) return;
             navigator.clipboard.writeText(text.replace(/\s/g, ''));
             
-            // Визуальный эффект при копировании
             const originalBG = el.style.backgroundColor;
             el.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
             setTimeout(() => { el.style.backgroundColor = originalBG || 'transparent'; }, 500);
@@ -517,7 +521,14 @@
             }
         }
 
-        window.onload = () => { router('home'); createSnow(); }
+        window.onload = () => { 
+            router('home'); 
+            createSnow(); 
+            // Принудительно запускаем начальную анимацию после загрузки
+            setTimeout(() => {
+                document.getElementById('content').classList.add('active');
+            }, 100);
+        }
     </script>
 </body>
 </html>
