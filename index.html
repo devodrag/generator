@@ -33,7 +33,6 @@
             filter: blur(0);
         }
 
-
         /* --- 2. HAMMER EFFECT (Generation Result) --- */
         .hammer-char {
             display: inline-block; 
@@ -76,65 +75,19 @@
         }
         input:focus, textarea:focus { border-color: rgba(255, 255, 255, 0.4) !important; }
         
-        /* Custom Select GUI Styling */
-        .custom-select {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-
-        .select-styled {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 1.5rem;
-            padding: 1rem 1.5rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .select-styled:after {
-            content: '';
-            width: 0; height: 0;
-            border: 6px solid transparent;
-            border-color: #ededed transparent transparent transparent;
-            position: absolute;
-            top: 50%; right: 20px;
-            margin-top: -3px;
-            transition: transform 0.2s;
-        }
-
-        .select-styled.active:after {
-            transform: translateY(-50%) rotate(-180deg);
-        }
-
+        /* Custom Select GUI Styling (Styles are unchanged) */
+        .custom-select { position: relative; display: inline-block; width: 100%; }
+        .select-styled { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5rem; padding: 1rem 1.5rem; cursor: pointer; transition: all 0.2s ease; }
+        .select-styled:after { content: ''; width: 0; height: 0; border: 6px solid transparent; border-color: #ededed transparent transparent transparent; position: absolute; top: 50%; right: 20px; margin-top: -3px; transition: transform 0.2s; }
+        .select-styled.active:after { transform: translateY(-50%) rotate(-180deg); }
         .select-options {
-            display: none;
-            position: absolute;
-            top: 100%; left: 0; right: 0;
-            z-index: 10;
-            background: #1c1c1c;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-            margin-top: 5px;
-            max-height: 200px;
-            overflow-y: auto;
-            animation: fadeIn 0.3s ease-out;
+            display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
+            background: #1c1c1c; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem;
+            margin-top: 5px; max-height: 200px; overflow-y: auto; animation: fadeIn 0.3s ease-out;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .select-options li {
-            padding: 10px 15px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .select-options li:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .select-options li { padding: 10px 15px; cursor: pointer; transition: background-color 0.2s; }
+        .select-options li:hover { background-color: rgba(255, 255, 255, 0.1); }
         .copy-hint { font-size: 10px; color: rgba(255,255,255,0.2); margin-top: 10px; cursor: pointer; }
     </style>
 </head>
@@ -152,6 +105,7 @@
         <button onclick="router('qr')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">QR Code</button>
         <button onclick="router('ball')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">8-Ball</button>
         <button onclick="router('cards')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Cards</button>
+        <button onclick="router('chat')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Chat</button>
     </nav>
 
     <main class="flex-grow flex items-center justify-center p-6">
@@ -159,7 +113,29 @@
     </main>
 
     <script>
-        // --- MORSE CODE DATABASE ---
+        // --- GLOBAL STATE MANAGEMENT ---
+        const MGT_STATE = {
+            stats: {
+                generations: 0,
+                copies: 0
+            },
+            // Load nickname from session storage, which clears when browser tab is closed/refreshed
+            nickname: sessionStorage.getItem('mgt_nickname') || '',
+            // Chat history is local for demo
+            chatHistory: JSON.parse(localStorage.getItem('mgt_chat_history')) || []
+        };
+        
+        // Helper function to update stats display on Home
+        function updateStatsDisplay() {
+            if (document.getElementById('statGenerations')) {
+                hammer(document.getElementById('statGenerations'), MGT_STATE.stats.generations);
+            }
+            if (document.getElementById('statCopies')) {
+                hammer(document.getElementById('statCopies'), MGT_STATE.stats.copies);
+            }
+        }
+        
+        // --- MORSE CODE DATABASE (unchanged) ---
         const MORSE_CODE = {
             'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
             'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
@@ -173,53 +149,53 @@
         const MORSE_DECODE = {};
         for (const key in MORSE_CODE) { MORSE_DECODE[MORSE_CODE[key]] = key; }
 
-        // --- TRANSLATION DATA ---
+        // --- TRANSLATION DATA (unchanged) ---
         const LANGUAGES = [
-            { code: 'ru', name: 'Russian' },
-            { code: 'en', name: 'English' },
-            { code: 'de', name: 'German' },
-            { code: 'fr', name: 'French' },
-            { code: 'zh', name: 'Chinese' },
-            { code: 'es', name: 'Spanish' },
+            { code: 'ru', name: 'Russian' }, { code: 'en', name: 'English' },
+            { code: 'de', name: 'German' }, { code: 'fr', name: 'French' },
+            { code: 'zh', name: 'Chinese' }, { code: 'es', name: 'Spanish' },
             { code: 'it', name: 'Italian' }
         ];
         
-        // --- CARD TYPES FOR CUSTOM SELECT ---
+        // --- CARD TYPES FOR CUSTOM SELECT (unchanged) ---
         const CARD_TYPES = [
             { code: 'visa', name: 'VISA' },
             { code: 'mc', name: 'MASTERCARD' },
             { code: 'mir', name: 'MIR' }
         ];
 
-        // --- CORE FUNCTIONS: ROUTER FIX ---
+        // --- CORE FUNCTIONS: ROUTER ---
         function router(path) {
             const content = document.getElementById('content');
             
-            // 1. Начинаем анимацию исчезновения (fade-out)
             content.classList.remove('active'); 
 
             setTimeout(() => {
-                // 2. Смена контента, пока он не виден (после fade-out)
                 const map = {
                     'number': renderNumber, 'pass': renderPass, 'id': renderID,
                     'morse': renderMorse, 'qr': renderQR, 'ball': renderBall, 
-                    'cards': renderCards, 'translate': renderTranslate, 'home': renderHome
+                    'cards': renderCards, 'translate': renderTranslate, 
+                    'chat': renderChat, // Added Chat
+                    'home': renderHome
                 };
                 content.innerHTML = map[path] ? map[path]() : renderHome();
                 
-                // 3. Запускаем анимацию появления (fade-in) на следующем кадре
                 setTimeout(() => {
                     content.classList.add('active');
                     
-                    // 4. Инициализация кастомных селекторов
+                    // Initialization based on path
                     if (path === 'translate') {
                         initCustomSelect('fromLangSelect');
                         initCustomSelect('toLangSelect');
                     } else if (path === 'cards') {
                         initCustomSelect('cardTypeSelect');
+                    } else if (path === 'home') {
+                        updateStatsDisplay(); // Update stats when returning Home
+                    } else if (path === 'chat') {
+                        initChat(); // Initialize chat view
                     }
-                }, 10); // Небольшая задержка, чтобы браузер успел увидеть смену контента
-            }, 250); // Время должно совпадать со временем transition в CSS (#content)
+                }, 10);
+            }, 250);
         }
 
         // Анимация текста
@@ -240,6 +216,10 @@
             if (text === "..." || text === "****" || text === "Awaiting Input" || text === "Encrypted Result" || text === "Translation Result" || text.startsWith("Error:")) return;
             navigator.clipboard.writeText(text.replace(/\s/g, ''));
             
+            // Increment copy stat
+            MGT_STATE.stats.copies++;
+            updateStatsDisplay(); 
+
             const originalBG = el.style.backgroundColor;
             el.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
             setTimeout(() => { el.style.backgroundColor = originalBG || 'transparent'; }, 500);
@@ -307,206 +287,148 @@
             });
         }
 
-        // --- RENDER FUNCTIONS (Translated to English, updated Home) ---
-        function renderHome() { return `<div class="text-center"><h1 class="text-8xl font-bold tracking-tighter mb-4">MGT.<span class="opacity-10">25</span></h1><p class="text-white/20 uppercase tracking-[0.5em] text-[9px]">MULTI-TOOL GENERATOR</p></div>`; }
+        // --- CHAT LOGIC ---
+        function initChat() {
+            // Display current nickname
+            document.getElementById('nicknameInput').value = MGT_STATE.nickname;
+            
+            // Re-render chat messages
+            renderChatMessages();
 
-        function renderNumber() { return `<div class="glass-card p-12 text-center"><div id="resNum" class="text-8xl font-bold mb-12 h-24 flex justify-center items-center">0</div><div class="flex gap-4 mb-8"><input id="minN" type="number" value="1" class="w-1/2 p-6 rounded-3xl text-center" placeholder="Min"><input id="maxN" type="number" value="100" class="w-1/2 p-6 rounded-3xl text-center" placeholder="Max"></div><button onclick="genNumber()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate</button></div>`; }
+            // Set up event listeners for input fields
+            document.getElementById('nicknameInput').addEventListener('input', saveNickname);
+            document.getElementById('chatMessage').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        }
 
-        function renderPass() { return `<div class="glass-card p-12 text-center"><div id="resPass" class="text-2xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resPass')">****</div><div class="copy-hint">Click to copy</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Length: <span id="passLenVal">16</span></label><input type="range" id="passLen" min="4" max="100" value="16" class="w-full accent-white" oninput="document.getElementById('passLenVal').innerText=this.value"></div><button onclick="genPass()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate Password</button></div>`; }
+        function saveNickname() {
+            const input = document.getElementById('nicknameInput').value.trim();
+            MGT_STATE.nickname = input;
+            sessionStorage.setItem('mgt_nickname', input);
+            document.getElementById('nicknameStatus').innerText = input ? `Active as: ${input}` : 'Enter Nickname';
+        }
 
-        function renderID() { return `<div class="glass-card p-12 text-center"><div id="resID" class="text-3xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resID')">Awaiting Input</div><div class="copy-hint">Click to copy</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Length: <span id="idLenVal">10</span></label><input type="range" id="idLen" min="1" max="100" value="10" class="w-full accent-white" oninput="document.getElementById('idLenVal').innerText=this.value"></div><button onclick="genID()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate ID/Hash</button></div>`; }
+        function sendMessage() {
+            const messageInput = document.getElementById('chatMessage');
+            const messageText = messageInput.value.trim();
+            const nick = MGT_STATE.nickname || 'Anon';
 
-        function renderMorse() { 
-            return `<div class="glass-card p-12"><h2 class="text-xl font-bold mb-6 text-center opacity-80">Morse Code Encryptor / Decryptor</h2>
-                <div class="mb-8">
-                    <label class="text-[10px] opacity-30 block mb-2 uppercase">Text to Morse Code</label>
-                    <textarea id="morseText" class="w-full p-4 rounded-xl min-h-[80px] text-sm" placeholder="Enter text (e.g., SOS)"></textarea>
-                    <div id="morseEncryptRes" class="text-lg font-mono mt-3 break-all min-h-[1.5rem] cursor-pointer" onclick="copyText('morseEncryptRes')">Encrypted Result</div>
-                    <button onclick="encryptMorse()" class="w-full mt-4 py-4 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Encrypt</button>
-                </div>
-                <div class="pt-8 border-t border-white/5">
-                    <label class="text-[10px] opacity-30 block mb-2 uppercase">Morse Code to Text</label>
-                    <textarea id="morseCode" class="w-full p-4 rounded-xl min-h-[80px] text-lg font-mono" placeholder="Enter code (e.g., ... --- ...)"></textarea>
-                    <div id="morseDecryptRes" class="text-xl font-bold mt-3 min-h-[1.5rem] cursor-pointer" onclick="copyText('morseDecryptRes')">Decrypted Result</div>
-                    <button onclick="decryptMorse()" class="w-full mt-4 py-4 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Decrypt</button>
+            if (!messageText) return;
+
+            const newMessage = {
+                timestamp: new Date().toLocaleTimeString(),
+                nickname: nick,
+                text: messageText,
+                isMine: true // Always true for local demo
+            };
+
+            MGT_STATE.chatHistory.push(newMessage);
+            localStorage.setItem('mgt_chat_history', JSON.stringify(MGT_STATE.chatHistory));
+            
+            messageInput.value = '';
+            renderChatMessages();
+            
+            // Simulate a response from "MGT Bot"
+            setTimeout(() => {
+                const botResponse = {
+                    timestamp: new Date().toLocaleTimeString(),
+                    nickname: 'MGT Bot',
+                    text: `Hello, ${nick}! I registered your local message.`,
+                    isMine: false
+                };
+                MGT_STATE.chatHistory.push(botResponse);
+                localStorage.setItem('mgt_chat_history', JSON.stringify(MGT_STATE.chatHistory));
+                renderChatMessages();
+            }, 1000);
+        }
+
+        function renderChatMessages() {
+            const chatArea = document.getElementById('chatMessages');
+            if (!chatArea) return;
+            
+            chatArea.innerHTML = MGT_STATE.chatHistory.map(msg => {
+                const color = msg.isMine ? 'text-gray-400' : 'text-green-400';
+                return `<div class="mb-2 p-3 rounded-lg bg-white/5">
+                    <span class="text-[10px] opacity-40 mr-2">${msg.timestamp}</span>
+                    <span class="${color} font-bold">${msg.nickname}:</span> ${msg.text}
+                </div>`;
+            }).join('');
+            
+            // Scroll to bottom
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+
+        // --- RENDER FUNCTIONS ---
+
+        // UPDATED: Home with Stats Block
+        function renderHome() { 
+            return `<div class="text-center">
+                <h1 class="text-8xl font-bold tracking-tighter mb-4">MGT.<span class="opacity-10">25</span></h1>
+                <p class="text-white/20 uppercase tracking-[0.5em] text-[9px] mb-12">MULTI-TOOL GENERATOR</p>
+                
+                <div class="glass-card p-8">
+                    <h2 class="text-xl font-bold mb-6 text-center opacity-80">SESSION STATISTICS</h2>
+                    <div class="flex justify-around text-center">
+                        <div>
+                            <div id="statGenerations" class="text-4xl font-bold h-12">0</div>
+                            <div class="text-[10px] opacity-30 uppercase">Generations Count</div>
+                        </div>
+                        <div class="border-l border-white/10 mx-4"></div>
+                        <div>
+                            <div id="statCopies" class="text-4xl font-bold h-12">0</div>
+                            <div class="text-[10px] opacity-30 uppercase">Copied Count</div>
+                        </div>
+                    </div>
                 </div>
             </div>`; 
         }
 
-        function renderTranslate() {
-            const langOptions = LANGUAGES.map(lang => `<option value="${lang.code}" ${lang.code === 'en' ? 'selected' : ''}>${lang.name}</option>`).join('');
-            const targetLangOptions = LANGUAGES.map(lang => `<option value="${lang.code}" ${lang.code === 'ru' ? 'selected' : ''}>${lang.name}</option>`).join('');
-
-            return `<div class="glass-card p-12">
-                <h2 class="text-xl font-bold mb-6 text-center opacity-80">Universal Translator (Google API)</h2>
+        function renderNumber() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="resNum" class="text-8xl font-bold mb-12 h-24 flex justify-center items-center">0</div><div class="flex gap-4 mb-8"><input id="minN" type="number" value="1" class="w-1/2 p-6 rounded-3xl text-center" placeholder="Min"><input id="maxN" type="number" value="100" class="w-1/2 p-6 rounded-3xl text-center" placeholder="Max"></div><button onclick="genNumber()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate</button></div>`; }
+        function renderPass() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="resPass" class="text-2xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resPass')">****</div><div class="copy-hint">Click to copy</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Length: <span id="passLenVal">16</span></label><input type="range" id="passLen" min="4" max="100" value="16" class="w-full accent-white" oninput="document.getElementById('passLenVal').innerText=this.value"></div><button onclick="genPass()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate Password</button></div>`; }
+        function renderID() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="resID" class="text-3xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resID')">Awaiting Input</div><div class="copy-hint">Click to copy</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Length: <span id="idLenVal">10</span></label><input type="range" id="idLen" min="1" max="100" value="10" class="w-full accent-white" oninput="document.getElementById('idLenVal').innerText=this.value"></div><button onclick="genID()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate ID/Hash</button></div>`; }
+        function renderMorse() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12"><h2 class="text-xl font-bold mb-6 text-center opacity-80">Morse Code Encryptor / Decryptor</h2><div class="mb-8"><label class="text-[10px] opacity-30 block mb-2 uppercase">Text to Morse Code</label><textarea id="morseText" class="w-full p-4 rounded-xl min-h-[80px] text-sm" placeholder="Enter text (e.g., SOS)"></textarea><div id="morseEncryptRes" class="text-lg font-mono mt-3 break-all min-h-[1.5rem] cursor-pointer" onclick="copyText('morseEncryptRes')">Encrypted Result</div><button onclick="encryptMorse()" class="w-full mt-4 py-4 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Encrypt</button></div><div class="pt-8 border-t border-white/5"><label class="text-[10px] opacity-30 block mb-2 uppercase">Morse Code to Text</label><textarea id="morseCode" class="w-full p-4 rounded-xl min-h-[80px] text-lg font-mono" placeholder="Enter code (e.g., ... --- ...)"></textarea><div id="morseDecryptRes" class="text-xl font-bold mt-3 min-h-[1.5rem] cursor-pointer" onclick="copyText('morseDecryptRes')">Decrypted Result</div><button onclick="decryptMorse()" class="w-full mt-4 py-4 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Decrypt</button></div></div>`; }
+        function renderTranslate() { MGT_STATE.stats.generations++; const langOptions = LANGUAGES.map(lang => `<option value="${lang.code}" ${lang.code === 'en' ? 'selected' : ''}>${lang.name}</option>`).join(''); const targetLangOptions = LANGUAGES.map(lang => `<option value="${lang.code}" ${lang.code === 'ru' ? 'selected' : ''}>${lang.name}</option>`).join(''); return `<div class="glass-card p-12"><h2 class="text-xl font-bold mb-6 text-center opacity-80">Universal Translator (Google API)</h2><div class="flex gap-4 mb-6"><div class="w-1/2"><label class="text-[10px] opacity-30 block mb-2 uppercase">From Language</label><select id="fromLangSelect" class="hidden">${langOptions}</select></div><div class="w-1/2"><label class="text-[10px] opacity-30 block mb-2 uppercase">To Language</label><select id="toLangSelect" class="hidden">${targetLangOptions}</select></div></div><textarea id="sourceText" class="w-full p-4 rounded-xl min-h-[100px] text-sm mb-4" placeholder="Enter text to translate..."></textarea><div id="translateResult" class="text-xl font-bold mt-3 mb-6 min-h-[1.5rem] cursor-pointer text-center" onclick="copyText('translateResult')">Translation Result</div><button onclick="translateText()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Translate</button></div>`; }
+        function renderQR() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="qrcode" class="flex justify-center mb-8 p-4 bg-white rounded-3xl w-fit mx-auto hidden transition-all"></div><input id="qrText" type="text" placeholder="Enter URL/text here..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genQR()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate QR</button></div>`; }
+        function renderBall() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="resBall" class="text-4xl font-bold mb-12 h-20 flex justify-center items-center text-white/50 italic">Ask a question</div><input id="ballQuest" type="text" placeholder="Your question to fate..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genBall()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Find the Truth</button></div>`; }
+        function renderCards() { MGT_STATE.stats.generations++; const cardOptions = CARD_TYPES.map(card => `<option value="${card.code}" ${card.code === 'visa' ? 'selected' : ''}>${card.name}</option>`).join(''); return `<div class="glass-card p-8"><div class="relative w-full aspect-[1.58/1] bg-[#0d0d0d] rounded-[2.5rem] p-10 mb-8 flex flex-col justify-between border border-white/5"><div class="flex justify-between items-start"><span id="cType" class="text-2xl font-bold opacity-10">CARD TYPE</span><div class="w-12 h-8 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div></div><div id="cNum" class="text-2xl tracking-[0.2em] font-mono">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20 mb-1 font-bold">BALANCE</div><div id="cBal" class="text-2xl font-bold tracking-tighter">$ 0.00</div></div><div><div id="cExp" class="text-xl opacity-40 italic">00/00</div></div></div></div><label class="text-[10px] opacity-30 block mb-2 uppercase">Select Card Type</label><select id="cardTypeSelect" class="hidden w-full p-6 rounded-3xl mb-6 text-center">${cardOptions}</select><button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Issue Card</button></div>`; }
+        
+        // NEW: Render Chat
+        function renderChat() {
+            return `<div class="glass-card p-8">
+                <h2 class="text-xl font-bold mb-6 text-center opacity-80">Local Chat Simulation</h2>
                 
-                <div class="flex gap-4 mb-6">
-                    <div class="w-1/2">
-                        <label class="text-[10px] opacity-30 block mb-2 uppercase">From Language</label>
-                        <select id="fromLangSelect" class="hidden">${langOptions}</select>
-                    </div>
-
-                    <div class="w-1/2">
-                        <label class="text-[10px] opacity-30 block mb-2 uppercase">To Language</label>
-                        <select id="toLangSelect" class="hidden">${targetLangOptions}</select>
-                    </div>
+                <div class="mb-6">
+                    <label class="text-[10px] opacity-30 block mb-2 uppercase">Your Nickname (Session Only)</label>
+                    <input id="nicknameInput" type="text" maxlength="15" placeholder="Enter nickname here..." class="w-full p-4 rounded-xl text-center text-sm">
+                    <p id="nicknameStatus" class="copy-hint text-center mt-2">${MGT_STATE.nickname ? `Active as: ${MGT_STATE.nickname}` : 'Enter Nickname'}</p>
                 </div>
+                
+                <div id="chatMessages" class="h-64 overflow-y-auto p-4 mb-4 rounded-xl border border-white/10 bg-black/30">
+                    </div>
 
-                <textarea id="sourceText" class="w-full p-4 rounded-xl min-h-[100px] text-sm mb-4" placeholder="Enter text to translate..."></textarea>
-                
-                <div id="translateResult" class="text-xl font-bold mt-3 mb-6 min-h-[1.5rem] cursor-pointer text-center" onclick="copyText('translateResult')">Translation Result</div>
-                
-                <button onclick="translateText()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Translate</button>
+                <div class="flex gap-3">
+                    <input id="chatMessage" type="text" placeholder="Type your message (Enter to send)" class="flex-grow p-4 rounded-3xl text-sm">
+                    <button onclick="sendMessage()" class="py-4 px-6 rounded-full bg-white text-black font-bold btn-hover uppercase text-[10px]">Send</button>
+                </div>
             </div>`;
         }
 
-        function renderQR() { return `<div class="glass-card p-12 text-center"><div id="qrcode" class="flex justify-center mb-8 p-4 bg-white rounded-3xl w-fit mx-auto hidden transition-all"></div><input id="qrText" type="text" placeholder="Enter URL/text here..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genQR()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate QR</button></div>`; }
-        function renderBall() { return `<div class="glass-card p-12 text-center"><div id="resBall" class="text-4xl font-bold mb-12 h-20 flex justify-center items-center text-white/50 italic">Ask a question</div><input id="ballQuest" type="text" placeholder="Your question to fate..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genBall()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Find the Truth</button></div>`; }
-        
-        function renderCards() { 
-            const cardOptions = CARD_TYPES.map(card => `<option value="${card.code}" ${card.code === 'visa' ? 'selected' : ''}>${card.name}</option>`).join('');
+        // --- GENERATION LOGIC (UPDATED: Stat incremented in render functions) ---
+        function genNumber() { const min = +document.getElementById('minN').value; const max = +document.getElementById('maxN').value; hammer(document.getElementById('resNum'), Math.floor(Math.random()*(max-min+1))+min); }
+        function genPass() { const len = +document.getElementById('passLen').value; const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+"; let ret = ""; for (let i = 0; i < len; ++i) ret += charset.charAt(Math.floor(Math.random() * charset.length)); hammer(document.getElementById('resPass'), ret); }
+        function genID() { const len = +document.getElementById('idLen').value; const charset = "abcdefghijklmnopqrstuvwxyz0123456789"; let ret = ""; for (let i = 0; i < len; ++i) ret += charset.charAt(Math.floor(Math.random() * charset.length)); hammer(document.getElementById('resID'), ret.toUpperCase()); }
+        function encryptMorse() { const text = document.getElementById('morseText').value.toUpperCase(); let result = ''; for (let i = 0; i < text.length; i++) { const char = text[i]; if (MORSE_CODE[char]) { result += MORSE_CODE[char] + ' '; } } hammer(document.getElementById('morseEncryptRes'), result.trim()); }
+        function decryptMorse() { const code = document.getElementById('morseCode').value.trim(); const words = code.split(' / '); let result = ''; for (let i = 0; i < words.length; i++) { const chars = words[i].split(' '); for (let j = 0; j < chars.length; j++) { const morseChar = chars[j]; if (MORSE_DECODE[morseChar]) { result += MORSE_DECODE[morseChar]; } } if (i < words.length - 1) { result += ' '; } } hammer(document.getElementById('morseDecryptRes'), result); }
+        async function translateText() { const sourceText = document.getElementById('sourceText').value; const fromLang = document.querySelector('[data-target-id="fromLangSelect"] .select-styled').getAttribute('data-value'); const toLang = document.querySelector('[data-target-id="toLangSelect"] .select-styled').getAttribute('data-value'); const resultEl = document.getElementById('translateResult'); if (!sourceText) { hammer(resultEl, "Enter text."); return; } hammer(resultEl, "Translating via Google..."); const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURI(sourceText)}`; try { const response = await axios.get(translateUrl); if (response.data && response.data[0] && response.data[0][0] && response.data[0][0][0]) { const translatedText = response.data[0][0][0]; hammer(resultEl, translatedText); console.log("Translation successful."); } else { hammer(resultEl, "Error: Could not parse Google API response."); } } catch (error) { console.error("Translation Error (Google API):", error); hammer(resultEl, `Critical Error: Google API issue. Last error: ${error.message}`); } }
+        function genQR() { const text = document.getElementById('qrText').value; const qrDiv = document.getElementById('qrcode'); if(!text) return; qrDiv.innerHTML = ""; qrDiv.classList.remove('hidden'); new QRCode(qrDiv, { text: text, width: 200, height: 200, colorDark: "#000", colorLight: "#fff" }); }
+        function genBall() { const answers = ["Yes", "No", "Maybe", "Unlikely", "Never", "Always", "Definitely", "Try again"]; if(!document.getElementById('ballQuest').value) return; hammer(document.getElementById('resBall'), answers[Math.floor(Math.random()*answers.length)]); }
+        function genCard() { const type = document.querySelector('[data-target-id="cardTypeSelect"] .select-styled').getAttribute('data-value'); let bin = type === 'mir' ? "2204" : (type === 'visa' ? "4539" : "5167"); const rest = Array.from({length: 3}, () => Math.floor(Math.random()*8999+1000)).join(' '); const date = Math.floor(Math.random()*12+1).toString().padStart(2,'0') + "/" + Math.floor(Math.random()*30+26); const bal = (Math.random()*900+100).toFixed(2); document.getElementById('cType').innerText = type.toUpperCase(); document.getElementById('cExp').innerText = date; hammer(document.getElementById('cNum'), `${bin} ${rest}`); const currency = type === 'mir' ? "₽ " : "$ "; hammer(document.getElementById('cBal'), currency + bal); }
 
-            return `<div class="glass-card p-8">
-                <div class="relative w-full aspect-[1.58/1] bg-[#0d0d0d] rounded-[2.5rem] p-10 mb-8 flex flex-col justify-between border border-white/5">
-                    <div class="flex justify-between items-start">
-                        <span id="cType" class="text-2xl font-bold opacity-10">CARD TYPE</span>
-                        <div class="w-12 h-8 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div>
-                    </div>
-                    <div id="cNum" class="text-2xl tracking-[0.2em] font-mono">0000 0000 0000 0000</div>
-                    <div class="flex justify-between items-end">
-                        <div>
-                            <div class="text-[8px] opacity-20 mb-1 font-bold">BALANCE</div>
-                            <div id="cBal" class="text-2xl font-bold tracking-tighter">$ 0.00</div>
-                        </div>
-                        <div>
-                            <div id="cExp" class="text-xl opacity-40 italic">00/00</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <label class="text-[10px] opacity-30 block mb-2 uppercase">Select Card Type</label>
-                <select id="cardTypeSelect" class="hidden w-full p-6 rounded-3xl mb-6 text-center">
-                    ${cardOptions}
-                </select>
-                <button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Issue Card</button>
-            </div>`; 
-        }
-
-
-        // --- GENERATION LOGIC (UNCHANGED) ---
-        function genNumber() {
-            const min = +document.getElementById('minN').value;
-            const max = +document.getElementById('maxN').value;
-            hammer(document.getElementById('resNum'), Math.floor(Math.random()*(max-min+1))+min);
-        }
-        function genPass() {
-            const len = +document.getElementById('passLen').value;
-            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
-            let ret = "";
-            for (let i = 0; i < len; ++i) ret += charset.charAt(Math.floor(Math.random() * charset.length));
-            hammer(document.getElementById('resPass'), ret);
-        }
-        function genID() {
-            const len = +document.getElementById('idLen').value;
-            const charset = "abcdefghijklmnopqrstuvwxyz0123456789";
-            let ret = "";
-            for (let i = 0; i < len; ++i) ret += charset.charAt(Math.floor(Math.random() * charset.length));
-            hammer(document.getElementById('resID'), ret.toUpperCase());
-        }
-        function encryptMorse() {
-            const text = document.getElementById('morseText').value.toUpperCase();
-            let result = '';
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                if (MORSE_CODE[char]) {
-                    result += MORSE_CODE[char] + ' ';
-                }
-            }
-            hammer(document.getElementById('morseEncryptRes'), result.trim());
-        }
-        function decryptMorse() {
-            const code = document.getElementById('morseCode').value.trim();
-            const words = code.split(' / ');
-            let result = '';
-            for (let i = 0; i < words.length; i++) {
-                const chars = words[i].split(' ');
-                for (let j = 0; j < chars.length; j++) {
-                    const morseChar = chars[j];
-                    if (MORSE_DECODE[morseChar]) {
-                        result += MORSE_DECODE[morseChar];
-                    }
-                }
-                if (i < words.length - 1) {
-                    result += ' ';
-                }
-            }
-            hammer(document.getElementById('morseDecryptRes'), result);
-        }
-        
-        // --- TRANSLATE LOGIC (Using unofficial Google API) ---
-        async function translateText() {
-            const sourceText = document.getElementById('sourceText').value;
-            
-            const fromLang = document.querySelector('[data-target-id="fromLangSelect"] .select-styled').getAttribute('data-value');
-            const toLang = document.querySelector('[data-target-id="toLangSelect"] .select-styled').getAttribute('data-value');
-            
-            const resultEl = document.getElementById('translateResult');
-            
-            if (!sourceText) {
-                hammer(resultEl, "Enter text.");
-                return;
-            }
-
-            hammer(resultEl, "Translating via Google...");
-            
-            const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURI(sourceText)}`;
-
-            try {
-                const response = await axios.get(translateUrl);
-                
-                if (response.data && response.data[0] && response.data[0][0] && response.data[0][0][0]) {
-                    const translatedText = response.data[0][0][0];
-                    hammer(resultEl, translatedText);
-                    console.log("Translation successful.");
-                } else {
-                    hammer(resultEl, "Error: Could not parse Google API response.");
-                }
-
-            } catch (error) {
-                console.error("Translation Error (Google API):", error);
-                hammer(resultEl, `Critical Error: Google API issue. Last error: ${error.message}`);
-            }
-        }
-        
-        function genQR() {
-            const text = document.getElementById('qrText').value;
-            const qrDiv = document.getElementById('qrcode');
-            if(!text) return;
-            qrDiv.innerHTML = ""; qrDiv.classList.remove('hidden');
-            new QRCode(qrDiv, { text: text, width: 200, height: 200, colorDark: "#000", colorLight: "#fff" });
-        }
-
-        function genBall() {
-            const answers = ["Yes", "No", "Maybe", "Unlikely", "Never", "Always", "Definitely", "Try again"];
-            if(!document.getElementById('ballQuest').value) return;
-            hammer(document.getElementById('resBall'), answers[Math.floor(Math.random()*answers.length)]);
-        }
-
-        function genCard() {
-            const type = document.querySelector('[data-target-id="cardTypeSelect"] .select-styled').getAttribute('data-value');
-            
-            let bin = type === 'mir' ? "2204" : (type === 'visa' ? "4539" : "5167");
-            const rest = Array.from({length: 3}, () => Math.floor(Math.random()*8999+1000)).join(' ');
-            const date = Math.floor(Math.random()*12+1).toString().padStart(2,'0') + "/" + Math.floor(Math.random()*30+26);
-            const bal = (Math.random()*900+100).toFixed(2);
-
-            document.getElementById('cType').innerText = type.toUpperCase();
-            document.getElementById('cExp').innerText = date;
-            hammer(document.getElementById('cNum'), `${bin} ${rest}`);
-            
-            const currency = type === 'mir' ? "₽ " : "$ ";
-            hammer(document.getElementById('cBal'), currency + bal);
-        }
 
         function createSnow() {
             const container = document.getElementById('snow-container');
