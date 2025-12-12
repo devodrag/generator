@@ -175,7 +175,7 @@
                     'number': renderNumber, 'pass': renderPass, 'id': renderID,
                     'morse': renderMorse, 'qr': renderQR, 'ball': renderBall, 
                     'cards': renderCards, 'translate': renderTranslate, 
-                    'chat': renderChat, // Added Chat
+                    'chat': renderChat,
                     'home': renderHome
                 };
                 content.innerHTML = map[path] ? map[path]() : renderHome();
@@ -319,43 +319,60 @@
 
             if (!messageText) return;
 
-            const newMessage = {
-                timestamp: new Date().toLocaleTimeString(),
-                nickname: nick,
-                text: messageText,
-                isMine: true // Always true for local demo
-            };
-
-            MGT_STATE.chatHistory.push(newMessage);
-            localStorage.setItem('mgt_chat_history', JSON.stringify(MGT_STATE.chatHistory));
-            
-            messageInput.value = '';
-            renderChatMessages();
-            
-            // Simulate a response from "MGT Bot"
-            setTimeout(() => {
+            // --- NEW: Handle /chat command ---
+            if (messageText.toLowerCase() === '/chat') {
                 const botResponse = {
                     timestamp: new Date().toLocaleTimeString(),
                     nickname: 'MGT Bot',
-                    text: `Hello, ${nick}! I registered your local message.`,
+                    text: 'Вступайте в наш чат в телеграмме! https://t.me/chatutki',
                     isMine: false
                 };
                 MGT_STATE.chatHistory.push(botResponse);
-                localStorage.setItem('mgt_chat_history', JSON.stringify(MGT_STATE.chatHistory));
-                renderChatMessages();
-            }, 1000);
+            } else {
+                // --- User message ---
+                const userMessage = {
+                    timestamp: new Date().toLocaleTimeString(),
+                    nickname: nick,
+                    text: messageText,
+                    isMine: true
+                };
+                MGT_STATE.chatHistory.push(userMessage);
+            }
+
+            localStorage.setItem('mgt_chat_history', JSON.stringify(MGT_STATE.chatHistory));
+            
+            messageInput.value = '';
+            renderChatMessages(); // Мгновенное обновление
         }
 
         function renderChatMessages() {
             const chatArea = document.getElementById('chatMessages');
             if (!chatArea) return;
             
+            // NEW: Generate HTML content
             chatArea.innerHTML = MGT_STATE.chatHistory.map(msg => {
                 const color = msg.isMine ? 'text-gray-400' : 'text-green-400';
-                return `<div class="mb-2 p-3 rounded-lg bg-white/5">
-                    <span class="text-[10px] opacity-40 mr-2">${msg.timestamp}</span>
-                    <span class="${color} font-bold">${msg.nickname}:</span> ${msg.text}
-                </div>`;
+                const alignment = msg.isMine ? 'text-right' : 'text-left';
+                const bg = msg.isMine ? 'bg-white/10 ml-auto' : 'bg-white/5 mr-auto';
+                
+                // Adjusting structure for bot vs user messages
+                if (msg.nickname === 'MGT Bot') {
+                    // Bot message
+                    return `<div class="mb-2 ${alignment} w-full">
+                        <div class="p-3 rounded-xl ${bg} max-w-[80%]">
+                            <span class="text-[10px] opacity-40 mr-2">${msg.timestamp}</span>
+                            <span class="text-green-400 font-bold">${msg.nickname}:</span> ${msg.text}
+                        </div>
+                    </div>`;
+                } else {
+                    // User message
+                    return `<div class="mb-2 ${alignment} w-full">
+                        <div class="p-3 rounded-xl ${bg} max-w-[80%]">
+                            <span class="text-[10px] opacity-40 mr-2">${msg.timestamp}</span>
+                            <span class="${color} font-bold">${msg.nickname}:</span> ${msg.text}
+                        </div>
+                    </div>`;
+                }
             }).join('');
             
             // Scroll to bottom
@@ -397,7 +414,7 @@
         function renderBall() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="resBall" class="text-4xl font-bold mb-12 h-20 flex justify-center items-center text-white/50 italic">Ask a question</div><input id="ballQuest" type="text" placeholder="Your question to fate..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genBall()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Find the Truth</button></div>`; }
         function renderCards() { MGT_STATE.stats.generations++; const cardOptions = CARD_TYPES.map(card => `<option value="${card.code}" ${card.code === 'visa' ? 'selected' : ''}>${card.name}</option>`).join(''); return `<div class="glass-card p-8"><div class="relative w-full aspect-[1.58/1] bg-[#0d0d0d] rounded-[2.5rem] p-10 mb-8 flex flex-col justify-between border border-white/5"><div class="flex justify-between items-start"><span id="cType" class="text-2xl font-bold opacity-10">CARD TYPE</span><div class="w-12 h-8 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div></div><div id="cNum" class="text-2xl tracking-[0.2em] font-mono">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20 mb-1 font-bold">BALANCE</div><div id="cBal" class="text-2xl font-bold tracking-tighter">$ 0.00</div></div><div><div id="cExp" class="text-xl opacity-40 italic">00/00</div></div></div></div><label class="text-[10px] opacity-30 block mb-2 uppercase">Select Card Type</label><select id="cardTypeSelect" class="hidden w-full p-6 rounded-3xl mb-6 text-center">${cardOptions}</select><button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Issue Card</button></div>`; }
         
-        // NEW: Render Chat
+        // Render Chat (unchanged structure)
         function renderChat() {
             return `<div class="glass-card p-8">
                 <h2 class="text-xl font-bold mb-6 text-center opacity-80">Local Chat Simulation</h2>
