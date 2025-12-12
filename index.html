@@ -206,28 +206,24 @@
             setTimeout(() => { el.style.backgroundColor = originalBG || 'transparent'; }, 500);
         }
 
-        // --- ✅ ВОССТАНОВЛЕННАЯ ЛОГИКА СТИЛИЗОВАННОГО SELECT ---
+        // --- ЛОГИКА СТИЛИЗОВАННОГО SELECT ---
         function initCustomSelect(id) {
             const originalSelect = document.getElementById(id);
             if (!originalSelect) return; 
 
-            // Скрываем оригинальный select
             originalSelect.style.display = 'none';
 
-            // Удаляем старую кастомную версию, если она есть
             const existingCustom = originalSelect.nextElementSibling;
             if (existingCustom && existingCustom.classList.contains('custom-select')) {
                 existingCustom.remove();
             }
 
-            // Создаем обертку
             const customSelect = document.createElement('div');
             customSelect.className = 'custom-select';
             customSelect.setAttribute('data-target-id', id);
 
             const selectedOption = originalSelect.options[originalSelect.selectedIndex];
             
-            // Создаем стилизованный блок для отображения текущего значения
             const styledSelect = document.createElement('div');
             styledSelect.className = 'select-styled';
             styledSelect.innerText = selectedOption.text;
@@ -236,7 +232,6 @@
             styledSelect.onclick = function(e) {
                 e.stopPropagation();
                 
-                // Закрываем другие открытые списки
                 document.querySelectorAll('.select-styled.active').forEach(activeStyled => {
                     if (activeStyled !== this) {
                         activeStyled.classList.remove('active');
@@ -249,7 +244,6 @@
                 options.style.display = options.style.display === 'block' ? 'none' : 'block';
             };
 
-            // Создаем список опций
             const optionsList = document.createElement('ul');
             optionsList.className = 'select-options';
 
@@ -259,16 +253,13 @@
                 listItem.setAttribute('data-value', option.value);
                 
                 listItem.onclick = function() {
-                    // Обновляем отображаемое значение
                     styledSelect.innerText = this.innerText;
                     styledSelect.setAttribute('data-value', this.getAttribute('data-value'));
                     styledSelect.classList.remove('active');
                     optionsList.style.display = 'none';
 
-                    // Обновляем значение в оригинальном (скрытом) select
                     originalSelect.value = this.getAttribute('data-value');
                     
-                    // Опционально: запускаем событие change, если это нужно для логики
                     const event = new Event('change');
                     originalSelect.dispatchEvent(event);
                 };
@@ -279,7 +270,6 @@
             customSelect.appendChild(optionsList);
             originalSelect.parentNode.insertBefore(customSelect, originalSelect.nextSibling);
 
-            // Закрытие списка при клике вне его
             document.addEventListener('click', function(e) {
                 if (!customSelect.contains(e.target)) {
                     styledSelect.classList.remove('active');
@@ -329,6 +319,7 @@
         async function translateText() { const sourceText = document.getElementById('sourceText').value; const fromLang = document.querySelector('[data-target-id="fromLangSelect"] .select-styled').getAttribute('data-value'); const toLang = document.querySelector('[data-target-id="toLangSelect"] .select-styled').getAttribute('data-value'); const resultEl = document.getElementById('translateResult'); if (!sourceText) { hammer(resultEl, "Enter text."); return; } hammer(resultEl, "Translating via Google..."); const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURI(sourceText)}`; try { const response = await axios.get(translateUrl); if (response.data && response.data[0] && response.data[0][0] && response.data[0][0][0]) { const translatedText = response.data[0][0][0]; hammer(resultEl, translatedText); console.log("Translation successful."); } else { hammer(resultEl, "Error: Could not parse Google API response."); } } catch (error) { console.error("Translation Error (Google API):", error); hammer(resultEl, `Critical Error: Google API issue. Last error: ${error.message}`); } }
         function genQR() { const text = document.getElementById('qrText').value; const qrDiv = document.getElementById('qrcode'); if(!text) return; qrDiv.innerHTML = ""; qrDiv.classList.remove('hidden'); new QRCode(qrDiv, { text: text, width: 200, height: 200, colorDark: "#000", colorLight: "#fff" }); }
         function genBall() { const answers = ["Yes", "No", "Maybe", "Unlikely", "Never", "Always", "Definitely", "Try again"]; if(!document.getElementById('ballQuest').value) return; hammer(document.getElementById('resBall'), answers[Math.floor(Math.random()*answers.length)]); }
+        
         function genCard() { 
             const typeElement = document.querySelector('[data-target-id="cardTypeSelect"] .select-styled');
             if (!typeElement) {
@@ -337,7 +328,19 @@
             }
             const type = typeElement.getAttribute('data-value');
             
-            let bin = type === 'mir' ? "2204" : (type === 'visa' ? "4539" : "5167"); 
+            let bin;
+            // ✅ ИСПРАВЛЕНИЕ: Полный список BIN-кодов
+            if (type === 'mir') {
+                const mirBins = ["2200", "2201", "2202", "2203", "2204"];
+                bin = mirBins[Math.floor(Math.random() * mirBins.length)];
+            } else if (type === 'visa') {
+                const visaBins = ["4111", "4444", "4539", "4567", "4786", "4921", "4929"];
+                bin = visaBins[Math.floor(Math.random() * visaBins.length)];
+            } else { // MASTERCARD (mc)
+                const mcBins = ["5167", "5200", "5227", "5300", "5459", "5512", "5545"];
+                bin = mcBins[Math.floor(Math.random() * mcBins.length)];
+            }
+            
             const rest = Array.from({length: 3}, () => Math.floor(Math.random()*8999+1000)).join(' '); 
             const date = Math.floor(Math.random()*12+1).toString().padStart(2,'0') + "/" + Math.floor(Math.random()*30+26); 
             const bal = (Math.random()*900+100).toFixed(2); 
