@@ -151,32 +151,7 @@
             { code: 'it', name: 'Итальянский' }
         ];
 
-        // --- FALLBACK API CONFIGURATION (Добавлен третий API) ---
-        const TRANSLATION_APIS = [
-            // Primary API 
-            {
-                name: "Terraprint/LibreTranslate",
-                url: 'https://translate.terraprint.co/translate',
-                payload: (q, source, target) => ({ q: q, source: source, target: target, format: 'text' }),
-                extract: (response) => response.data.translatedText
-            },
-            // Secondary API
-            {
-                name: "Argos/TranslateAPI",
-                url: 'https://translate.api.on-prem.ml/translate',
-                payload: (q, source, target) => ({ q: q, source: source, target: target, format: 'text' }),
-                extract: (response) => response.data.translatedText
-            },
-            // Tertiary API (Новый запасной вариант)
-            {
-                name: "SimplyTranslate",
-                url: 'https://simplytranslate.tech/api/translate',
-                payload: (q, source, target) => ({ text: q, source: source, target: target, api: 'google' }),
-                extract: (response) => response.data.translated_text
-            }
-        ];
-
-        // --- CORE FUNCTIONS ---
+        // --- CORE FUNCTIONS (unchanged) ---
         function router(path) {
             const content = document.getElementById('content');
             content.style.opacity = '0';
@@ -277,13 +252,9 @@
 
         // --- RENDER FUNCTIONS (Translated) ---
         function renderHome() { return `<div class="text-center"><h1 class="text-8xl font-bold tracking-tighter mb-4">GEN<span class="opacity-10">.</span>25</h1><p class="text-white/20 uppercase tracking-[1em] text-[9px]">Пакет случайных генераторов</p></div>`; }
-
         function renderNumber() { return `<div class="glass-card p-12 text-center"><div id="resNum" class="text-8xl font-bold mb-12 h-24 flex justify-center items-center">0</div><div class="flex gap-4 mb-8"><input id="minN" type="number" value="1" class="w-1/2 p-6 rounded-3xl text-center" placeholder="От"><input id="maxN" type="number" value="100" class="w-1/2 p-6 rounded-3xl text-center" placeholder="До"></div><button onclick="genNumber()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Сгенерировать</button></div>`; }
-
         function renderPass() { return `<div class="glass-card p-12 text-center"><div id="resPass" class="text-2xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resPass')">****</div><div class="copy-hint">Нажмите для копирования</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Длина: <span id="passLenVal">16</span></label><input type="range" id="passLen" min="4" max="100" value="16" class="w-full accent-white" oninput="document.getElementById('passLenVal').innerText=this.value"></div><button onclick="genPass()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Сгенерировать пароль</button></div>`; }
-
         function renderID() { return `<div class="glass-card p-12 text-center"><div id="resID" class="text-3xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resID')">Ожидание ввода</div><div class="copy-hint">Нажмите для копирования</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Длина: <span id="idLenVal">10</span></label><input type="range" id="idLen" min="1" max="100" value="10" class="w-full accent-white" oninput="document.getElementById('idLenVal').innerText=this.value"></div><button onclick="genID()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Сгенерировать ID/Хеш</button></div>`; }
-
         function renderMorse() { 
             return `<div class="glass-card p-12"><h2 class="text-xl font-bold mb-6 text-center opacity-80">Шифратор / Дешифратор Морзе</h2>
                 <div class="mb-8">
@@ -329,9 +300,7 @@
         }
 
         function renderQR() { return `<div class="glass-card p-12 text-center"><div id="qrcode" class="flex justify-center mb-8 p-4 bg-white rounded-3xl w-fit mx-auto hidden transition-all"></div><input id="qrText" type="text" placeholder="Введите URL/текст здесь..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genQR()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Сгенерировать QR</button></div>`; }
-
         function renderBall() { return `<div class="glass-card p-12 text-center"><div id="resBall" class="text-4xl font-bold mb-12 h-20 flex justify-center items-center text-white/50 italic">Задай вопрос</div><input id="ballQuest" type="text" placeholder="Твой вопрос судьбе..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genBall()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Узнать правду</button></div>`; }
-
         function renderCards() { return `<div class="glass-card p-8"><div class="relative w-full aspect-[1.58/1] bg-[#0d0d0d] rounded-[2.5rem] p-10 mb-8 flex flex-col justify-between border border-white/5"><div class="flex justify-between items-start"><span id="cType" class="text-2xl font-bold opacity-10">ТИП КАРТЫ</span><div class="w-12 h-8 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div></div><div id="cNum" class="text-2xl tracking-[0.2em] font-mono">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20 mb-1 font-bold">БАЛАНС</div><div id="cBal" class="text-2xl font-bold tracking-tighter">₽ 0.00</div></div><div><div id="cExp" class="text-xl opacity-40 italic">00/00</div></div></div></div><select id="bType" class="w-full p-6 rounded-3xl mb-6 text-center"><option value="visa">VISA</option><option value="mc">MASTERCARD</option><option value="mir">МИР</option></select><button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Выпустить карту</button></div>`; }
 
 
@@ -385,10 +354,11 @@
             hammer(document.getElementById('morseDecryptRes'), result);
         }
         
-        // --- UPDATED TRANSLATE LOGIC (Перебор трех API) ---
+        // --- ФИНАЛЬНАЯ ЛОГИКА ПЕРЕВОДА НА GOOGLE TRANSLATE (Самый стабильный бесплатный вариант) ---
         async function translateText() {
             const sourceText = document.getElementById('sourceText').value;
             
+            // Получаем выбранные языки из кастомного GUI
             const fromLang = document.querySelector('[data-target-id="fromLangSelect"] .select-styled').getAttribute('data-value');
             const toLang = document.querySelector('[data-target-id="toLangSelect"] .select-styled').getAttribute('data-value');
             
@@ -399,43 +369,30 @@
                 return;
             }
 
-            hammer(resultEl, "Перевод... (Попытка 1)");
+            hammer(resultEl, "Перевод через Google...");
             
-            let translatedText = null;
-            let lastError = null;
+            // Формируем URL для неофициального API Google Translate
+            const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURI(sourceText)}`;
 
-            // Перебираем ВСЕ доступные API (теперь их 3)
-            for (let i = 0; i < TRANSLATION_APIS.length; i++) {
-                const api = TRANSLATION_APIS[i];
-                hammer(resultEl, `Перевод через ${api.name}...`);
-
-                // Две попытки для текущего API
-                for (let attempt = 1; attempt <= 2; attempt++) {
-                    try {
-                        const payload = api.payload(sourceText, fromLang, toLang);
-                        const response = await axios.post(api.url, payload);
-                        
-                        // Проверка, что ответ валиден 
-                        if (response.data && api.extract(response) && api.extract(response) !== sourceText) {
-                            translatedText = api.extract(response);
-                            hammer(resultEl, translatedText);
-                            console.log(`Translation successful using ${api.name} on attempt ${attempt}.`);
-                            return; // Успех, выходим
-                        }
-                    } catch (error) {
-                        lastError = `Ошибка API (${api.name}): ${error.message}`;
-                        console.error(lastError, error);
-                        // Ждем 500мс перед второй попыткой
-                        if (attempt === 1) {
-                            hammer(resultEl, `Повтор на ${api.name}...`);
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                        }
-                    }
+            try {
+                // Используем Axios для GET-запроса
+                const response = await axios.get(translateUrl);
+                
+                // Ответ Google API сложный: это массив массивов. 
+                // Перевод обычно находится в response.data[0][0][0]
+                if (response.data && response.data[0] && response.data[0][0] && response.data[0][0][0]) {
+                    const translatedText = response.data[0][0][0];
+                    hammer(resultEl, translatedText);
+                    console.log("Translation successful using Google Translate unofficial API.");
+                } else {
+                    hammer(resultEl, "Ошибка: Не удалось разобрать ответ Google API.");
                 }
-            }
 
-            // Если все 6 попыток (3 API * 2) провалились
-            hammer(resultEl, `Ошибка: Все API недоступны. Попробуйте позже. Последняя ошибка: ${lastError}`);
+            } catch (error) {
+                // Если и этот API не работает, это означает серьезную блокировку
+                console.error("Translation Error (Google API):", error);
+                hammer(resultEl, `Критическая ошибка: Проблема с Google API. Последняя ошибка: ${error.message}`);
+            }
         }
         
         function genQR() {
