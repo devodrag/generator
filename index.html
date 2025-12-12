@@ -91,7 +91,7 @@
         <button onclick="router('qr')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">QR Code</button>
         <button onclick="router('ball')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">8-Ball</button>
         <button onclick="router('cards')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Cards</button>
-        </nav>
+    </nav>
 
     <main class="flex-grow flex items-center justify-center p-6">
         <div id="content" class="w-full max-w-xl page-enter"></div>
@@ -106,7 +106,6 @@
                 copies: 0
             },
             nickname: sessionStorage.getItem('mgt_nickname') || '',
-            // Chat history removed
         };
         
         // Helper function to update stats display on Home
@@ -152,8 +151,6 @@
         function router(path) {
             const content = document.getElementById('content');
             
-            // 🗑️ No need to stop chat listener anymore
-
             content.classList.remove('active'); 
 
             setTimeout(() => {
@@ -178,7 +175,6 @@
                     } else if (path === 'home') {
                         updateStatsDisplay(); 
                     } 
-                    // 🗑️ No initChat call needed
                 }, 10);
             }, 250);
         }
@@ -210,32 +206,50 @@
             setTimeout(() => { el.style.backgroundColor = originalBG || 'transparent'; }, 500);
         }
 
-        // --- CUSTOM SELECT LOGIC (GUI) (Placeholder functions for brevity) ---
+        // --- ✅ ВОССТАНОВЛЕННАЯ ЛОГИКА СТИЛИЗОВАННОГО SELECT ---
         function initCustomSelect(id) {
             const originalSelect = document.getElementById(id);
             if (!originalSelect) return; 
 
+            // Скрываем оригинальный select
+            originalSelect.style.display = 'none';
+
+            // Удаляем старую кастомную версию, если она есть
+            const existingCustom = originalSelect.nextElementSibling;
+            if (existingCustom && existingCustom.classList.contains('custom-select')) {
+                existingCustom.remove();
+            }
+
+            // Создаем обертку
             const customSelect = document.createElement('div');
             customSelect.className = 'custom-select';
             customSelect.setAttribute('data-target-id', id);
 
             const selectedOption = originalSelect.options[originalSelect.selectedIndex];
             
+            // Создаем стилизованный блок для отображения текущего значения
             const styledSelect = document.createElement('div');
             styledSelect.className = 'select-styled';
             styledSelect.innerText = selectedOption.text;
             styledSelect.setAttribute('data-value', selectedOption.value);
-            styledSelect.onclick = function() {
-                const active = document.querySelector('.select-styled.active');
-                if (active && active !== this) {
-                    active.classList.remove('active');
-                    document.querySelector(`[data-target-id="${active.parentNode.getAttribute('data-target-id')}"] .select-options`).style.display = 'none';
-                }
+            
+            styledSelect.onclick = function(e) {
+                e.stopPropagation();
+                
+                // Закрываем другие открытые списки
+                document.querySelectorAll('.select-styled.active').forEach(activeStyled => {
+                    if (activeStyled !== this) {
+                        activeStyled.classList.remove('active');
+                        activeStyled.nextElementSibling.style.display = 'none';
+                    }
+                });
+
                 this.classList.toggle('active');
                 const options = this.nextElementSibling;
                 options.style.display = options.style.display === 'block' ? 'none' : 'block';
             };
 
+            // Создаем список опций
             const optionsList = document.createElement('ul');
             optionsList.className = 'select-options';
 
@@ -243,33 +257,37 @@
                 const listItem = document.createElement('li');
                 listItem.innerText = option.text;
                 listItem.setAttribute('data-value', option.value);
+                
                 listItem.onclick = function() {
+                    // Обновляем отображаемое значение
                     styledSelect.innerText = this.innerText;
                     styledSelect.setAttribute('data-value', this.getAttribute('data-value'));
                     styledSelect.classList.remove('active');
                     optionsList.style.display = 'none';
 
+                    // Обновляем значение в оригинальном (скрытом) select
                     originalSelect.value = this.getAttribute('data-value');
+                    
+                    // Опционально: запускаем событие change, если это нужно для логики
+                    const event = new Event('change');
+                    originalSelect.dispatchEvent(event);
                 };
                 optionsList.appendChild(listItem);
             });
 
             customSelect.appendChild(styledSelect);
             customSelect.appendChild(optionsList);
-            originalSelect.parentNode.replaceChild(customSelect, originalSelect);
+            originalSelect.parentNode.insertBefore(customSelect, originalSelect.nextSibling);
 
+            // Закрытие списка при клике вне его
             document.addEventListener('click', function(e) {
                 if (!customSelect.contains(e.target)) {
-                    const activeStyled = document.querySelector('.select-styled.active');
-                    if(activeStyled) {
-                        activeStyled.classList.remove('active');
-                        document.querySelector(`[data-target-id="${activeStyled.parentNode.getAttribute('data-target-id')}"] .select-options`).style.display = 'none';
-                    }
+                    styledSelect.classList.remove('active');
+                    optionsList.style.display = 'none';
                 }
             });
         }
 
-        // 🗑️ All CHAT LOGIC removed (initChat, sendMessage, renderChatMessages, etc.)
 
         // --- RENDER FUNCTIONS ---
         function renderHome() { 
@@ -300,10 +318,8 @@
         function renderTranslate() { MGT_STATE.stats.generations++; const langOptions = LANGUAGES.map(lang => `<option value="${lang.code}" ${lang.code === 'en' ? 'selected' : ''}>${lang.name}</option>`).join(''); const targetLangOptions = LANGUAGES.map(lang => `<option value="${lang.code}" ${lang.code === 'ru' ? 'selected' : ''}>${lang.name}</option>`).join(''); return `<div class="glass-card p-12"><h2 class="text-xl font-bold mb-6 text-center opacity-80">Universal Translator (Google API)</h2><div class="flex gap-4 mb-6"><div class="w-1/2"><label class="text-[10px] opacity-30 block mb-2 uppercase">From Language</label><select id="fromLangSelect" class="hidden">${langOptions}</select></div><div class="w-1/2"><label class="text-[10px] opacity-30 block mb-2 uppercase">To Language</label><select id="toLangSelect" class="hidden">${targetLangOptions}</select></div></div><textarea id="sourceText" class="w-full p-4 rounded-xl min-h-[100px] text-sm mb-4" placeholder="Enter text to translate..."></textarea><div id="translateResult" class="text-xl font-bold mt-3 mb-6 min-h-[1.5rem] cursor-pointer text-center" onclick="copyText('translateResult')">Translation Result</div><button onclick="translateText()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Translate</button></div>`; }
         function renderQR() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="qrcode" class="flex justify-center mb-8 p-4 bg-white rounded-3xl w-fit mx-auto hidden transition-all"></div><input id="qrText" type="text" placeholder="Enter URL/text here..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genQR()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate QR</button></div>`; }
         function renderBall() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="resBall" class="text-4xl font-bold mb-12 h-20 flex justify-center items-center text-white/50 italic">Ask a question</div><input id="ballQuest" type="text" placeholder="Your question to fate..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genBall()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Find the Truth</button></div>`; }
-        function renderCards() { MGT_STATE.stats.generations++; const cardOptions = CARD_TYPES.map(card => `<option value="${card.code}" ${card.code === 'visa' ? 'selected' : ''}>${card.name}</option>`).join(''); return `<div class="glass-card p-8"><div class="relative w-full aspect-[1.58/1] bg-[#0d0d0d] rounded-[2.5rem] p-10 mb-8 flex flex-col justify-between border border-white/5"><div class="flex justify-between items-start"><span id="cType" class="text-2xl font-bold opacity-10">CARD TYPE</span><div class="w-12 h-8 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div></div><div id="cNum" class="text-2xl tracking-[0.2em] font-mono">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20 mb-1 font-bold">BALANCE</div><div id="cBal" class="text-2xl font-bold tracking-tighter">$ 0.00</div></div><div><div id="cExp" class="text-xl opacity-40 italic">00/00</div></div></div></div><label class="text-[10px] opacity-30 block mb-2 uppercase">Select Card Type</label><select id="cardTypeSelect" class="hidden w-full p-6 rounded-3xl mb-6 text-center">${cardOptions}</select><button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Issue Card</button></div>`; }
+        function renderCards() { MGT_STATE.stats.generations++; const cardOptions = CARD_TYPES.map(card => `<option value="${card.code}" ${card.code === 'visa' ? 'selected' : ''}>${card.name}</option>`).join(''); return `<div class="glass-card p-8"><div class="relative w-full aspect-[1.58/1] bg-[#0d0d0d] rounded-[2.5rem] p-10 mb-8 flex flex-col justify-between border border-white/5"><div class="flex justify-between items-start"><span id="cType" class="text-2xl font-bold opacity-10">CARD TYPE</span><div class="w-12 h-8 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div></div><div id="cNum" class="text-2xl tracking-[0.2em] font-mono">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20 mb-1 font-bold">BALANCE</div><div id="cBal" class="text-2xl font-bold tracking-tighter">$ 0.00</div></div><div><div id="cExp" class="text-xl opacity-40 italic">00/00</div></div></div></div><label class="text-[10px] opacity-30 block mb-2 uppercase">Select Card Type</label><select id="cardTypeSelect" class="hidden w-full p-6 rounded-3xl mb-6 text-center">${cardOptions}</select></div><button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Issue Card</button></div>`; }
         
-        // 🗑️ renderChat() removed
-
         // --- GENERATION LOGIC ---
         function genNumber() { const min = +document.getElementById('minN').value; const max = +document.getElementById('maxN').value; hammer(document.getElementById('resNum'), Math.floor(Math.random()*(max-min+1))+min); }
         function genPass() { const len = +document.getElementById('passLen').value; const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+"; let ret = ""; for (let i = 0; i < len; ++i) ret += charset.charAt(Math.floor(Math.random() * charset.length)); hammer(document.getElementById('resPass'), ret); }
@@ -313,7 +329,25 @@
         async function translateText() { const sourceText = document.getElementById('sourceText').value; const fromLang = document.querySelector('[data-target-id="fromLangSelect"] .select-styled').getAttribute('data-value'); const toLang = document.querySelector('[data-target-id="toLangSelect"] .select-styled').getAttribute('data-value'); const resultEl = document.getElementById('translateResult'); if (!sourceText) { hammer(resultEl, "Enter text."); return; } hammer(resultEl, "Translating via Google..."); const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURI(sourceText)}`; try { const response = await axios.get(translateUrl); if (response.data && response.data[0] && response.data[0][0] && response.data[0][0][0]) { const translatedText = response.data[0][0][0]; hammer(resultEl, translatedText); console.log("Translation successful."); } else { hammer(resultEl, "Error: Could not parse Google API response."); } } catch (error) { console.error("Translation Error (Google API):", error); hammer(resultEl, `Critical Error: Google API issue. Last error: ${error.message}`); } }
         function genQR() { const text = document.getElementById('qrText').value; const qrDiv = document.getElementById('qrcode'); if(!text) return; qrDiv.innerHTML = ""; qrDiv.classList.remove('hidden'); new QRCode(qrDiv, { text: text, width: 200, height: 200, colorDark: "#000", colorLight: "#fff" }); }
         function genBall() { const answers = ["Yes", "No", "Maybe", "Unlikely", "Never", "Always", "Definitely", "Try again"]; if(!document.getElementById('ballQuest').value) return; hammer(document.getElementById('resBall'), answers[Math.floor(Math.random()*answers.length)]); }
-        function genCard() { const type = document.querySelector('[data-target-id="cardTypeSelect"] .select-styled').getAttribute('data-value'); let bin = type === 'mir' ? "2204" : (type === 'visa' ? "4539" : "5167"); const rest = Array.from({length: 3}, () => Math.floor(Math.random()*8999+1000)).join(' '); const date = Math.floor(Math.random()*12+1).toString().padStart(2,'0') + "/" + Math.floor(Math.random()*30+26); const bal = (Math.random()*900+100).toFixed(2); document.getElementById('cType').innerText = type.toUpperCase(); document.getElementById('cExp').innerText = date; hammer(document.getElementById('cNum'), `${bin} ${rest}`); const currency = type === 'mir' ? "₽ " : "$ "; hammer(document.getElementById('cBal'), currency + bal); }
+        function genCard() { 
+            const typeElement = document.querySelector('[data-target-id="cardTypeSelect"] .select-styled');
+            if (!typeElement) {
+                 console.error("Card type element not found.");
+                 return;
+            }
+            const type = typeElement.getAttribute('data-value');
+            
+            let bin = type === 'mir' ? "2204" : (type === 'visa' ? "4539" : "5167"); 
+            const rest = Array.from({length: 3}, () => Math.floor(Math.random()*8999+1000)).join(' '); 
+            const date = Math.floor(Math.random()*12+1).toString().padStart(2,'0') + "/" + Math.floor(Math.random()*30+26); 
+            const bal = (Math.random()*900+100).toFixed(2); 
+            
+            document.getElementById('cType').innerText = type.toUpperCase(); 
+            document.getElementById('cExp').innerText = date; 
+            hammer(document.getElementById('cNum'), `${bin} ${rest}`); 
+            const currency = type === 'mir' ? "₽ " : "$ "; 
+            hammer(document.getElementById('cBal'), currency + bal); 
+        }
 
 
         function createSnow() {
