@@ -151,21 +151,28 @@
             { code: 'it', name: 'Итальянский' }
         ];
 
-        // --- FALLBACK API CONFIGURATION ---
+        // --- FALLBACK API CONFIGURATION (Добавлен третий API) ---
         const TRANSLATION_APIS = [
-            // Primary API (LibreTranslate clone)
+            // Primary API 
             {
                 name: "Terraprint/LibreTranslate",
                 url: 'https://translate.terraprint.co/translate',
                 payload: (q, source, target) => ({ q: q, source: source, target: target, format: 'text' }),
                 extract: (response) => response.data.translatedText
             },
-            // Secondary API (Another LibreTranslate instance)
+            // Secondary API
             {
                 name: "Argos/TranslateAPI",
                 url: 'https://translate.api.on-prem.ml/translate',
                 payload: (q, source, target) => ({ q: q, source: source, target: target, format: 'text' }),
                 extract: (response) => response.data.translatedText
+            },
+            // Tertiary API (Новый запасной вариант)
+            {
+                name: "SimplyTranslate",
+                url: 'https://simplytranslate.tech/api/translate',
+                payload: (q, source, target) => ({ text: q, source: source, target: target, api: 'google' }),
+                extract: (response) => response.data.translated_text
             }
         ];
 
@@ -378,11 +385,10 @@
             hammer(document.getElementById('morseDecryptRes'), result);
         }
         
-        // --- UPDATED TRANSLATE LOGIC (UNCHANGED FUNCTIONALITY) ---
+        // --- UPDATED TRANSLATE LOGIC (Перебор трех API) ---
         async function translateText() {
             const sourceText = document.getElementById('sourceText').value;
             
-            // Получаем выбранные языки из кастомного GUI
             const fromLang = document.querySelector('[data-target-id="fromLangSelect"] .select-styled').getAttribute('data-value');
             const toLang = document.querySelector('[data-target-id="toLangSelect"] .select-styled').getAttribute('data-value');
             
@@ -398,32 +404,37 @@
             let translatedText = null;
             let lastError = null;
 
+            // Перебираем ВСЕ доступные API (теперь их 3)
             for (let i = 0; i < TRANSLATION_APIS.length; i++) {
                 const api = TRANSLATION_APIS[i];
                 hammer(resultEl, `Перевод через ${api.name}...`);
 
+                // Две попытки для текущего API
                 for (let attempt = 1; attempt <= 2; attempt++) {
                     try {
                         const payload = api.payload(sourceText, fromLang, toLang);
                         const response = await axios.post(api.url, payload);
                         
-                        if (response.data && api.extract(response) !== undefined) {
+                        // Проверка, что ответ валиден 
+                        if (response.data && api.extract(response) && api.extract(response) !== sourceText) {
                             translatedText = api.extract(response);
                             hammer(resultEl, translatedText);
                             console.log(`Translation successful using ${api.name} on attempt ${attempt}.`);
-                            return; 
+                            return; // Успех, выходим
                         }
                     } catch (error) {
                         lastError = `Ошибка API (${api.name}): ${error.message}`;
                         console.error(lastError, error);
-                        if (attempt === 1 && TRANSLATION_APIS.length === 1) {
-                            hammer(resultEl, "Повтор...");
+                        // Ждем 500мс перед второй попыткой
+                        if (attempt === 1) {
+                            hammer(resultEl, `Повтор на ${api.name}...`);
                             await new Promise(resolve => setTimeout(resolve, 500));
                         }
                     }
                 }
             }
 
+            // Если все 6 попыток (3 API * 2) провалились
             hammer(resultEl, `Ошибка: Все API недоступны. Попробуйте позже. Последняя ошибка: ${lastError}`);
         }
         
