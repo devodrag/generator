@@ -3,309 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gen2025 | Premium Edition</title>
+    <title>Gen2025 | Neural Minimalist</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600&display=swap');
         
+        :root {
+            --bg: #050505;
+            --card: #111111;
+            --accent: #ffffff;
+        }
+
         body {
-            background-color: #030303;
-            color: #ffffff;
-            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: #ededed;
+            font-family: 'Space Grotesk', sans-serif;
             overflow-x: hidden;
             margin: 0;
         }
 
-        /* Анимация переключения страниц */
-        #content {
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Анимации страниц */
+        .page-enter { animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .page-exit { animation: fadeOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); filter: blur(10px); }
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; transform: translateY(-10px); }
         }
 
-        .page-transition {
-            animation: slideUp 0.6s forwards;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); filter: blur(15px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
-        }
-
-        /* Эффект "Молотка" (Hammer Hit) */
-        .char-unit {
+        /* Эффект вбивания букв */
+        .hammer-char {
             display: inline-block;
             opacity: 0;
-            transform: scale(3);
-            filter: blur(10px);
-            animation: hit 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transform: translateY(10px);
+            animation: hammerIn 0.15s ease-out forwards;
         }
 
-        @keyframes hit {
-            to { opacity: 1; transform: scale(1); filter: blur(0); }
+        @keyframes hammerIn {
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .glass {
-            background: rgba(15, 15, 15, 0.6);
-            backdrop-filter: blur(20px);
+        .glass-card {
+            background: var(--card);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 2.5rem;
+            border-radius: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        .btn-action {
-            background: #ffffff;
-            color: #000000;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .btn-hover {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .btn-action:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+        .btn-hover:hover {
+            background: var(--accent);
+            color: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
         }
 
-        /* Снежинки */
-        .dot {
-            position: fixed;
-            background: #fff;
-            border-radius: 50%;
-            pointer-events: none;
-            opacity: 0.2;
-            z-index: 0;
+        .snowflake {
+            position: fixed; background: white; border-radius: 50%; pointer-events: none; z-index: 0; opacity: 0.2;
         }
-
-        @keyframes fall {
-            to { transform: translateY(100vh); }
-        }
+        @keyframes fall { to { transform: translateY(100vh); } }
 
         select, input {
-            background: rgba(255,255,255,0.05) !important;
+            outline: none;
+            background: rgba(255,255,255,0.03) !important;
             border: 1px solid rgba(255,255,255,0.1) !important;
-            color: white;
+            transition: border 0.3s;
         }
+        select:focus, input:focus { border-color: rgba(255,255,255,0.4) !important; }
     </style>
 </head>
 <body>
 
-    <div id="snow-field"></div>
+    <div id="snow-container"></div>
 
-    <div class="relative z-10 min-h-screen flex flex-col">
-        <nav class="p-8 flex flex-wrap justify-center gap-6 border-b border-white/5 bg-black/40 backdrop-blur-md">
-            <button onclick="changePage('home')" class="hover:text-gray-400 transition">Меню</button>
-            <button onclick="changePage('num')" class="hover:text-gray-400 transition">Числа</button>
-            <button onclick="changePage('names')" class="hover:text-gray-400 transition">Имена</button>
-            <button onclick="changePage('addr')" class="hover:text-gray-400 transition">Адреса</button>
-            <button onclick="changePage('cards')" class="hover:text-gray-400 transition">Карты</button>
-            <button onclick="changePage('coin')" class="hover:text-gray-400 transition">Монетка</button>
+    <div id="app" class="relative z-10 min-h-screen flex flex-col">
+        <nav class="p-6 flex justify-center gap-6 md:gap-10 border-b border-white/5 bg-black/40 backdrop-blur-2xl sticky top-0 z-50">
+            <button onclick="router('home')" class="text-sm uppercase tracking-tighter opacity-50 hover:opacity-100 transition">Main</button>
+            <button onclick="router('number')" class="text-sm uppercase tracking-tighter opacity-50 hover:opacity-100 transition">Number</button>
+            <button onclick="router('names')" class="text-sm uppercase tracking-tighter opacity-50 hover:opacity-100 transition">Names</button>
+            <button onclick="router('addr')" class="text-sm uppercase tracking-tighter opacity-50 hover:opacity-100 transition">Address</button>
+            <button onclick="router('cards')" class="text-sm uppercase tracking-tighter opacity-50 hover:opacity-100 transition">Cards</button>
+            <button onclick="router('coin')" class="text-sm uppercase tracking-tighter opacity-50 hover:opacity-100 transition">Coin</button>
         </nav>
 
-        <main class="flex-grow flex items-center justify-center p-4">
-            <div id="content" class="w-full max-w-xl"></div>
+        <main class="flex-grow flex items-center justify-center p-6">
+            <div id="content" class="w-full max-w-2xl"></div>
         </main>
     </div>
 
     <script>
-        // --- РАСШИРЕННАЯ БАЗА ДАННЫХ ---
-        const DATA = {
+        // --- БАЗА ДАННЫХ (Запасная) ---
+        const FallbackDB = {
             names: {
-                RU: ["Артем Волков", "София Морозова", "Максим Орлов", "Анна Павлова", "Никита Зайцев", "Виктория Белова", "Даниил Козлов", "Алиса Фомина"],
-                US: ["Liam Hudson", "Olivia Vance", "Noah Sterling", "Ava Thorne", "William Brooks", "Mia Kensington", "Jameson Reed", "Harper Finn"],
-                BY: ["Янка Купала", "Зміцер Белы", "Павел Наварот", "Алеся Квецень", "Рыгор Барадулін", "Кастусь Каліноўскі", "Таццяна Воля"]
+                RU: ["Иван Смирнов", "Анна Кузнецова"], US: ["John Doe", "Jane Smith"], BY: ["Янка Купала", "Ганна Новік"]
             },
-            addr: {
-                RU: ["г. Москва, ул. Ленина, д. ", "г. Питер, пр. Мира, д. ", "г. Казань, ул. Баумана, д. ", "г. Сочи, Курортный пр., д. "],
-                US: ["NY, 5th Avenue, bld. ", "CA, Sunset Blvd, apt. ", "TX, Main St, unit. ", "FL, Ocean Drive, bld. "],
-                BY: ["Мінск, вул. Няміга, д. ", "Гомель, вул. Савецкая, д. ", "Брэст, вул. Машэрава, д. "],
-                NL: ["Amsterdam, Dam Square, ", "Rotterdam, Coolsingel, ", "Utrecht, Oudegracht, "],
-                PL: ["Warszawa, Chmielna, ", "Kraków, Floriańska, ", "Wrocław, Rynek, "]
+            cities: {
+                RU: "Москва", US: "New York", BY: "Минск", NL: "Amsterdam", PL: "Warszawa", IT: "Roma", FR: "Paris", LV: "Riga", LT: "Vilnius"
             }
         };
 
-        // --- РОУТИНГ И АНИМАЦИЯ СТРАНИЦ ---
-        function changePage(page) {
-            const container = document.getElementById('content');
-            container.style.opacity = '0';
-            container.style.transform = 'translateY(20px)';
+        // --- РОУТИНГ ---
+        function router(path) {
+            const content = document.getElementById('content');
+            content.className = 'page-exit';
             
             setTimeout(() => {
-                switch(page) {
-                    case 'home': renderHome(); break;
-                    case 'num': renderNumbers(); break;
-                    case 'names': renderNames(); break;
-                    case 'addr': renderAddresses(); break;
-                    case 'cards': renderCards(); break;
-                    case 'coin': renderCoin(); break;
+                switch(path) {
+                    case 'number': content.innerHTML = renderNumber(); break;
+                    case 'names': content.innerHTML = renderNames(); break;
+                    case 'addr': content.innerHTML = renderAddr(); break;
+                    case 'cards': content.innerHTML = renderCards(); break;
+                    case 'coin': content.innerHTML = renderCoin(); break;
+                    default: content.innerHTML = renderHome();
                 }
-                container.classList.remove('page-transition');
-                void container.offsetWidth;
-                container.classList.add('page-transition');
-                container.style.opacity = '1';
-                container.style.transform = 'translateY(0)';
+                content.className = 'page-enter';
+                window.location.hash = path;
             }, 300);
         }
 
-        // --- ФУНКЦИЯ "ВБИВАНИЯ" СИМВОЛОВ ---
-        function hammerType(targetId, text) {
-            const el = document.getElementById(targetId);
-            el.innerHTML = '';
-            const chars = text.toString().split('');
-            chars.forEach((c, i) => {
-                const span = document.createElement('span');
-                span.innerText = c === ' ' ? '\u00A0' : c;
-                span.className = 'char-unit';
-                span.style.animationDelay = `${i * 0.04}s`;
-                el.appendChild(span);
-            });
-        }
-
-        // --- РЕНДЕР СТРАНИЦ ---
+        // --- ШАБЛОНЫ ---
         function renderHome() {
-            document.getElementById('content').innerHTML = `
-                <div class="text-center">
-                    <h1 class="text-7xl font-extrabold mb-4 tracking-tighter">GEN.25</h1>
-                    <p class="text-white/30 uppercase tracking-[0.5em] text-xs">Black Minimalist Edition</p>
-                </div>`;
+            return `<div class="text-center"><h1 class="text-7xl font-bold tracking-tighter mb-4">GEN<span class="opacity-20">.</span>2025</h1><p class="text-white/30 uppercase tracking-[0.5em] text-xs">Autonomous Generation Hub</p></div>`;
         }
 
-        function renderNumbers() {
-            document.getElementById('content').innerHTML = `
-                <div class="glass p-12 text-center">
-                    <h2 class="opacity-20 text-xs mb-8 uppercase">Randomizer</h2>
-                    <div id="numOutput" class="text-8xl font-black mb-12 h-24 flex justify-center items-center">0</div>
-                    <div class="flex gap-4 mb-8">
-                        <input id="nMin" type="number" value="1" class="w-1/2 p-5 rounded-3xl text-center">
-                        <input id="nMax" type="number" value="100" class="w-1/2 p-5 rounded-3xl text-center">
-                    </div>
-                    <button onclick="doNum()" class="w-full p-6 rounded-3xl btn-action">Сгенерировать</button>
-                </div>`;
+        function renderNumber() {
+            return `<div class="glass-card p-10 text-center"><h2 class="opacity-20 uppercase text-xs mb-10 tracking-widest">Random Number</h2><div id="resNum" class="text-8xl font-bold mb-10 h-24 flex justify-center items-center">0</div><div class="flex gap-4 mb-6"><input id="minN" type="number" value="1" class="w-1/2 p-4 rounded-2xl text-center"><input id="maxN" type="number" value="100" class="w-1/2 p-4 rounded-2xl text-center"></div><button onclick="genNumber()" class="w-full py-5 rounded-2xl bg-white text-black font-bold btn-hover">STRIKE</button></div>`;
         }
 
         function renderNames() {
-            document.getElementById('content').innerHTML = `
-                <div class="glass p-12 text-center">
-                    <div id="nameOutput" class="text-3xl font-bold mb-12 h-16 flex justify-center items-center">Выбери регион</div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <button onclick="doName('RU')" class="p-4 border border-white/10 rounded-2xl hover:bg-white/5 transition">RU</button>
-                        <button onclick="doName('US')" class="p-4 border border-white/10 rounded-2xl hover:bg-white/5 transition">US</button>
-                        <button onclick="doName('BY')" class="p-4 border border-white/10 rounded-2xl hover:bg-white/5 transition">BY</button>
-                    </div>
-                </div>`;
+            return `<div class="glass-card p-10 text-center"><h2 class="opacity-20 uppercase text-xs mb-10 tracking-widest">Neural Identity</h2><div id="resName" class="text-3xl font-light mb-10 h-10 italic">...</div><div class="grid grid-cols-3 gap-3"><button onclick="genName('ru_RU')" class="p-4 border border-white/5 rounded-2xl btn-hover">RU</button><button onclick="genName('en_US')" class="p-4 border border-white/5 rounded-2xl btn-hover">US</button><button onclick="genName('en_US')" class="p-4 border border-white/5 rounded-2xl btn-hover">BY</button></div></div>`;
         }
 
-        function renderAddresses() {
-            document.getElementById('content').innerHTML = `
-                <div class="glass p-12 text-center">
-                    <div id="addrOutput" class="text-xl opacity-60 mb-12 h-16 flex justify-center items-center">Выберите страну</div>
-                    <select id="addrCountry" class="w-full p-5 rounded-3xl mb-8">
-                        <option value="RU">Россия</option><option value="US">USA</option>
-                        <option value="BY">Беларусь</option><option value="NL">Netherlands</option>
-                        <option value="PL">Poland</option>
-                    </select>
-                    <button onclick="doAddr()" class="w-full p-6 rounded-3xl btn-action">Найти адрес</button>
-                </div>`;
+        function renderAddr() {
+            return `<div class="glass-card p-10 text-center"><h2 class="opacity-20 uppercase text-xs mb-10 tracking-widest">Address Locator</h2><div id="resAddr" class="text-xl opacity-60 mb-10 min-h-[4rem] flex items-center justify-center">Select country</div><select id="country" class="w-full p-5 rounded-2xl mb-6 appearance-none text-center cursor-pointer"><option value="RU">Россия</option><option value="US">USA</option><option value="BY">Беларусь</option><option value="NL">Netherlands</option><option value="PL">Poland</option><option value="IT">Italy</option><option value="FR">France</option><option value="LV">Latvia</option><option value="LT">Lithuania</option></select><button onclick="genAddr()" class="w-full py-5 rounded-2xl bg-white text-black font-bold btn-hover">GENERATE ADDRESS</button></div>`;
         }
 
         function renderCards() {
-            document.getElementById('content').innerHTML = `
-                <div class="glass p-10">
-                    <div class="bg-gradient-to-br from-zinc-800 to-black rounded-[2rem] p-8 mb-8 border border-white/10 relative overflow-hidden">
-                        <div id="cardBrand" class="text-xl font-black italic opacity-20 mb-12 uppercase">PaySystem</div>
-                        <div id="cardNum" class="text-2xl font-mono tracking-widest mb-12">**** **** **** ****</div>
-                        <div class="flex justify-between items-end">
-                            <div><span class="text-[10px] opacity-30">BALANCE</span><br><span id="cardVal" class="text-xl">0.00</span></div>
-                            <div><span class="text-[10px] opacity-30">EXP</span><br><span id="cardExp">00/00</span></div>
-                        </div>
-                    </div>
-                    <select id="cardSelect" class="w-full p-5 rounded-3xl mb-8">
-                        <option value="mir">МИР</option><option value="visa">VISA</option><option value="mc">MASTERCARD</option>
-                    </select>
-                    <button onclick="doCard()" class="w-full p-6 rounded-3xl btn-action">Выпустить</button>
-                </div>`;
+            return `<div class="glass-card p-8 md:p-12"><div id="cardUI" class="relative overflow-hidden w-full aspect-[1.6/1] bg-[#161616] rounded-[2.5rem] p-8 mb-8 border border-white/5 shadow-2xl flex flex-col justify-between"><div class="flex justify-between items-start"><div id="cType" class="text-xl font-bold tracking-tighter opacity-20">PAYMENT</div><div class="w-12 h-8 bg-white/5 rounded-md"></div></div><div id="cNum" class="text-xl md:text-2xl tracking-[0.25em] font-mono text-white/80">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20 mb-1">BALANCE</div><div id="cBal" class="text-xl font-bold">$ 0.00</div></div><div><div class="text-[8px] opacity-20 mb-1">EXPIRY</div><div id="cExp" class="text-lg">00/00</div></div></div></div><select id="bType" class="w-full p-5 rounded-2xl mb-6 text-center cursor-pointer"><option value="visa">VISA</option><option value="mc">MASTERCARD</option><option value="mir">МИР</option></select><button onclick="genCard()" class="w-full py-5 rounded-2xl bg-white text-black font-bold btn-hover">GENERATE DATA</button></div>`;
         }
 
         function renderCoin() {
-            document.getElementById('content').innerHTML = `
-                <div class="glass p-12 text-center">
-                    <div id="coinVis" class="text-9xl mb-12 transition-all duration-500">🪙</div>
-                    <div class="flex gap-4">
-                        <button onclick="doCoin('Орел')" class="flex-1 p-5 border border-white/10 rounded-3xl hover:bg-white/5">Орел</button>
-                        <button onclick="doCoin('Решка')" class="flex-1 p-5 border border-white/10 rounded-3xl hover:bg-white/5">Решка</button>
-                    </div>
-                </div>`;
+            return `<div class="glass-card p-10 text-center"><h2 class="opacity-20 uppercase text-xs mb-10 tracking-widest">Gravity Bet</h2><div id="coinIcon" class="text-9xl mb-10 transition-all duration-500">🪙</div><div class="flex gap-4"><button onclick="toss('Орел')" class="flex-1 p-5 border border-white/5 rounded-2xl btn-hover">ОРЕЛ</button><button onclick="toss('Решка')" class="flex-1 p-5 border border-white/5 rounded-2xl btn-hover">РЕШКА</button></div></div>`;
         }
 
-        // --- ЛОГИКА ГЕНЕРАЦИИ ---
-        const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-        function doNum() {
-            const min = +document.getElementById('nMin').value;
-            const max = +document.getElementById('nMax').value;
-            hammerType('numOutput', rnd(min, max));
+        // --- ЛОГИКА ГЕНЕРАЦИИ (HAMMER EFFECT) ---
+        function hammerAnim(element, value) {
+            element.innerHTML = '';
+            const valStr = value.toString();
+            [...valStr].forEach((char, i) => {
+                const span = document.createElement('span');
+                span.innerHTML = char === ' ' ? '&nbsp;' : char;
+                span.className = 'hammer-char';
+                span.style.animationDelay = `${i * 0.02}s`;
+                element.appendChild(span);
+            });
         }
 
-        function doName(lang) {
-            const arr = DATA.names[lang];
-            hammerType('nameOutput', arr[rnd(0, arr.length-1)]);
+        function genNumber() {
+            const min = parseInt(document.getElementById('minN').value) || 0;
+            const max = parseInt(document.getElementById('maxN').value) || 999999;
+            const res = Math.floor(Math.random() * (max - min + 1)) + min;
+            hammerAnim(document.getElementById('resNum'), res);
         }
 
-        function doAddr() {
-            const c = document.getElementById('addrCountry').value;
-            const arr = DATA.addr[c];
-            hammerType('addrOutput', arr[rnd(0, arr.length-1)] + rnd(1, 250));
+        async function genName(locale) {
+            const el = document.getElementById('resName');
+            el.innerHTML = '<span class="opacity-20 animate-pulse">Neural thinking...</span>';
+            try {
+                const res = await fetch(`https://fakerapi.it/api/v1/persons?_quantity=1&_locale=${locale}`);
+                const data = await res.json();
+                const name = data.data[0].firstname + " " + data.data[0].lastname;
+                hammerAnim(el, name);
+            } catch {
+                hammerAnim(el, FallbackDB.names.US[0]);
+            }
         }
 
-        function doCard() {
-            const type = document.getElementById('cardSelect').value;
+        async function genAddr() {
+            const el = document.getElementById('resAddr');
+            const code = document.getElementById('country').value;
+            el.innerHTML = '<span class="opacity-20 animate-pulse">Syncing location...</span>';
+            try {
+                const res = await fetch(`https://fakerapi.it/api/v1/addresses?_quantity=1`);
+                const data = await res.json();
+                const d = data.data[0];
+                const city = FallbackDB.cities[code] || d.city;
+                const addr = `${city}, ${d.streetName}, ${d.buildingNumber}`;
+                hammerAnim(el, addr);
+            } catch {
+                hammerAnim(el, "Connection Error");
+            }
+        }
+
+        function genCard() {
+            const type = document.getElementById('bType').value;
             let bin = "";
-            let currency = "$";
+            let symbol = "$";
 
             if(type === 'mir') {
-                bin = "220" + rnd(0,4);
-                currency = "₽";
+                bin = "220" + Math.floor(Math.random()*5);
+                symbol = "₽";
             } else if(type === 'visa') {
-                bin = "4" + rnd(100, 999);
+                bin = "4" + Math.floor(Math.random()*9).toString().repeat(3);
             } else {
-                bin = rnd(0,1) ? rnd(51,55).toString() + rnd(10,99) : rnd(2221, 2720);
+                bin = "5" + (Math.floor(Math.random()*5)+1).toString() + Math.floor(Math.random()*89+10);
             }
 
-            const num = `${bin} ${rnd(1000,9999)} ${rnd(1000,9999)} ${rnd(1000,9999)}`;
-            const bal = (Math.random() * 900 + 100).toFixed(2) + " " + currency;
-            const exp = `${rnd(1,12).toString().padStart(2,'0')}/${rnd(26,99)}`;
+            const rest = Array.from({length: 3}, () => Math.floor(Math.random()*8999+1000)).join(' ');
+            const date = Math.floor(Math.random()*12+1).toString().padStart(2,'0') + "/" + Math.floor(Math.random()*70+26);
+            const bal = (Math.random()*900+100).toFixed(2);
 
-            document.getElementById('cardBrand').innerText = type;
-            hammerType('cardNum', num);
-            hammerType('cardVal', bal);
-            document.getElementById('cardExp').innerText = exp;
+            document.getElementById('cType').innerText = type.toUpperCase();
+            document.getElementById('cExp').innerText = date;
+            hammerAnim(document.getElementById('cNum'), `${bin} ${rest}`);
+            hammerAnim(document.getElementById('cBal'), `${symbol} ${bal}`);
         }
 
-        function doCoin(choice) {
-            const el = document.getElementById('coinVis');
-            el.style.transform = "rotateY(720deg) scale(1.2)";
+        function toss(bet) {
+            const icon = document.getElementById('coinIcon');
+            icon.style.transform = "rotateY(720deg) scale(1.2)";
             setTimeout(() => {
-                const res = Math.random() > 0.5 ? 'Орел' : 'Решка';
-                el.innerText = res === 'Орел' ? '🦅' : '🪙';
-                el.style.transform = "rotateY(0) scale(1)";
-                el.style.filter = res === choice ? "drop-shadow(0 0 20px gold)" : "grayscale(1)";
+                const side = Math.random() > 0.5 ? 'Орел' : 'Решка';
+                icon.innerText = side === 'Орел' ? '🦅' : '🪙';
+                icon.style.transform = "rotateY(0deg) scale(1)";
+                icon.style.filter = side === bet ? "drop-shadow(0 0 20px white)" : "grayscale(1)";
             }, 500);
         }
 
         // --- СНЕГ ---
-        function makeSnow() {
-            const field = document.getElementById('snow-field');
-            for(let i=0; i<40; i++) {
-                let s = document.createElement('div');
-                s.className = 'dot';
-                let size = rnd(2, 6) + 'px';
+        function createSnow() {
+            const container = document.getElementById('snow-container');
+            for (let i = 0; i < 40; i++) {
+                const s = document.createElement('div');
+                s.className = 'snowflake';
+                const size = Math.random() * 3 + 2 + 'px';
                 s.style.width = size; s.style.height = size;
-                s.style.left = Math.random()*100 + 'vw';
-                s.style.top = '-5vh';
-                s.style.animation = `fall ${rnd(5,15)}s linear infinite`;
-                s.style.animationDelay = rnd(0, 10) + 's';
-                field.appendChild(s);
+                s.style.left = Math.random() * 100 + 'vw';
+                s.style.animation = `fall ${Math.random()*10+10}s linear infinite`;
+                s.style.animationDelay = `-${Math.random()*20}s`;
+                container.appendChild(s);
             }
         }
 
-        window.onload = () => { changePage('home'); makeSnow(); };
+        window.onload = () => { router('home'); createSnow(); }
     </script>
 </body>
 </html>
