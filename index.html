@@ -3,50 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gen2025 | Clean Edition</title>
+    <title>Gen2025 | Neural Minimalist</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
         
         body {
-            background-color: #050505;
-            color: #ededed;
+            background-color: #050505; color: #ededed;
             font-family: 'Space Grotesk', sans-serif;
-            overflow-x: hidden;
-            margin: 0;
+            overflow-x: hidden; margin: 0;
         }
 
-        .page-transition { animation: slideUp 0.4s ease-out forwards; }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); filter: blur(10px); }
-            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        /* Плавное проявление контента */
+        .page-transition { animation: slideIn 0.5s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(15px) scale(0.98); filter: blur(10px); }
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
 
+        /* Эффект "Молотка" */
         .hammer-char {
-            display: inline-block;
-            opacity: 0;
-            transform: scale(2);
-            animation: hammerIn 0.1s ease-out forwards;
+            display: inline-block; opacity: 0; transform: scale(2.5);
+            animation: hammerIn 0.12s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
         @keyframes hammerIn { to { opacity: 1; transform: scale(1); } }
 
         .glass-card {
-            background: #111111;
+            background: rgba(17, 17, 17, 0.8);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 2rem;
+            border-radius: 2.5rem;
         }
 
         .btn-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .btn-hover:hover { background: #fff; color: #000; transform: scale(1.02); }
+        .btn-hover:hover { background: #fff; color: #000; transform: translateY(-2px); }
 
-        .snowflake { position: fixed; background: white; border-radius: 50%; pointer-events: none; opacity: 0.15; }
+        .snowflake { position: fixed; background: white; border-radius: 50%; pointer-events: none; opacity: 0.1; }
         @keyframes fall { to { transform: translateY(110vh); } }
 
         input, select { outline: none; background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+        
+        .copy-hint { font-size: 10px; color: rgba(255,255,255,0.2); margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -61,7 +62,6 @@
         <button onclick="router('qr')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">QR</button>
         <button onclick="router('ball')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Шар</button>
         <button onclick="router('cards')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Карты</button>
-        <button onclick="router('coin')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Монетка</button>
     </nav>
 
     <main class="flex-grow flex items-center justify-center p-6">
@@ -69,6 +69,20 @@
     </main>
 
     <script>
+        // --- ДАННЫЕ ДЛЯ "НЕЙРО" НИКОВ ---
+        const NickData = {
+            en: {
+                pre: ["Neon", "Dark", "Cyber", "Mega", "Ultra", "Frost", "Void", "Shadow", "Quantum", "Ghost", "Alpha", "Lunar"],
+                mid: ["Hunter", "Viper", "Dragon", "Storm", "Rider", "Soul", "Edge", "Zero", "Core", "Flame", "Knight", "Nova"],
+                post: ["_x", "77", "Prime", "Dev", "God", "Elite", "Force", "Static", "Zen", "Shift"]
+            },
+            ru: {
+                pre: ["Кибер", "Мега", "Атом", "Нейро", "Тень", "Квант", "Зеро", "Альфа", "Техно", "Крипто"],
+                mid: ["Охотник", "Волк", "Дракон", "Шторм", "Призрак", "Зверь", "Клинок", "Титан", "Демон"],
+                post: ["_рф", "777", "Топ", "Про", "Лорд", "Скорп", "Мастер"]
+            }
+        };
+
         function router(path) {
             const content = document.getElementById('content');
             content.style.opacity = '0';
@@ -80,7 +94,6 @@
                     case 'qr': content.innerHTML = renderQR(); break;
                     case 'ball': content.innerHTML = renderBall(); break;
                     case 'cards': content.innerHTML = renderCards(); break;
-                    case 'coin': content.innerHTML = renderCoin(); break;
                     default: content.innerHTML = renderHome();
                 }
                 content.classList.remove('page-transition');
@@ -90,22 +103,19 @@
             }, 200);
         }
 
-        // --- ШАБЛОНЫ ---
-        function renderHome() { return `<div class="text-center"><h1 class="text-8xl font-bold tracking-tighter mb-4">GEN<span class="opacity-10">.</span>25</h1><p class="text-white/20 uppercase tracking-[1em] text-[9px]">Minimalist Toolset</p></div>`; }
+        function renderHome() { return `<div class="text-center"><h1 class="text-8xl font-bold tracking-tighter mb-4">GEN<span class="opacity-10">.</span>25</h1><p class="text-white/20 uppercase tracking-[1em] text-[9px]">The Final Generation Tool</p></div>`; }
 
-        function renderNumber() { return `<div class="glass-card p-12 text-center"><div id="resNum" class="text-8xl font-bold mb-12 h-24 flex justify-center items-center">0</div><div class="flex gap-4 mb-8"><input id="minN" type="number" value="1" class="w-1/2 p-6 rounded-3xl text-center"><input id="maxN" type="number" value="100" class="w-1/2 p-6 rounded-3xl text-center"></div><button onclick="genNumber()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Сгенерировать</button></div>`; }
+        function renderNick() { return `<div class="glass-card p-12 text-center"><div id="resNick" class="text-5xl font-bold mb-8 h-16 flex justify-center items-center tracking-tighter cursor-pointer" onclick="copyText('resNick')">...</div><div class="copy-hint">Нажми на ник, чтобы скопировать</div><div class="mt-8 grid grid-cols-2 gap-4"><select id="nickLang" class="p-5 rounded-3xl"><option value="en">English AI</option><option value="ru">Russian AI</option></select><select id="nickType" class="p-5 rounded-3xl"><option value="mix">Сложный</option><option value="short">Короткий</option></select></div><button onclick="genNick()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Сгенерировать ник</button></div>`; }
 
-        function renderPass() { return `<div class="glass-card p-12 text-center"><div id="resPass" class="text-2xl font-mono mb-12 break-all min-h-[4rem]">****</div><div class="mb-8"><label class="text-[10px] opacity-30 block mb-4">ДЛИНА: <span id="passLenVal">16</span></label><input type="range" id="passLen" min="1" max="100" value="16" class="w-full accent-white" oninput="document.getElementById('passLenVal').innerText=this.value"></div><button onclick="genPass()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Создать пароль</button></div>`; }
+        function renderPass() { return `<div class="glass-card p-12 text-center"><div id="resPass" class="text-2xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resPass')">****</div><div class="copy-hint">Нажми на пароль, чтобы скопировать</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Символов: <span id="passLenVal">16</span></label><input type="range" id="passLen" min="4" max="64" value="16" class="w-full accent-white" oninput="document.getElementById('passLenVal').innerText=this.value"></div><button onclick="genPass()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Создать пароль</button></div>`; }
 
-        function renderNick() { return `<div class="glass-card p-12 text-center"><div id="resNick" class="text-4xl font-bold mb-12 h-16 flex justify-center items-center italic">...</div><div class="flex gap-4 mb-6"><select id="nickLang" class="w-1/2 p-6 rounded-3xl"><option value="en">English</option><option value="ru">Русский</option></select><input id="nickLen" type="number" value="6" min="1" max="10" class="w-1/2 p-6 rounded-3xl text-center"></div><button onclick="genNick()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Создать ник</button></div>`; }
+        function renderQR() { return `<div class="glass-card p-12 text-center"><div id="qrcode" class="flex justify-center mb-8 p-4 bg-white rounded-3xl w-fit mx-auto hidden transition-all"></div><input id="qrText" type="text" placeholder="Вставьте ссылку сюда..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genQR()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Создать QR-код</button></div>`; }
 
-        function renderQR() { return `<div class="glass-card p-12 text-center"><div id="qrcode" class="flex justify-center mb-8 p-4 bg-white rounded-2xl w-fit mx-auto hidden"></div><input id="qrText" type="text" placeholder="Вставьте ссылку..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm"><button onclick="genQR()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Генерировать QR</button></div>`; }
+        function renderBall() { return `<div class="glass-card p-12 text-center"><div id="resBall" class="text-4xl font-bold mb-12 h-20 flex justify-center items-center text-white/50 italic">Спроси меня</div><input id="ballQuest" type="text" placeholder="Твой вопрос судьбе..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genBall()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Узнать правду</button></div>`; }
 
-        function renderBall() { return `<div class="glass-card p-12 text-center"><div id="resBall" class="text-3xl font-bold mb-12 h-16 flex justify-center items-center text-white/40">Задай вопрос</div><input id="ballQuest" type="text" placeholder="Тут твой вопрос..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm"><button onclick="genBall()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Спросить судьбу</button></div>`; }
+        function renderNumber() { return `<div class="glass-card p-12 text-center"><div id="resNum" class="text-8xl font-bold mb-12 h-24 flex justify-center items-center">0</div><div class="flex gap-4 mb-8"><input id="minN" type="number" value="1" class="w-1/2 p-6 rounded-3xl text-center"><input id="maxN" type="number" value="100" class="w-1/2 p-6 rounded-3xl text-center"></div><button onclick="genNumber()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Ударить молотком</button></div>`; }
 
-        function renderCards() { return `<div class="glass-card p-8"><div class="relative w-full aspect-[1.58/1] bg-zinc-900 rounded-[2rem] p-8 mb-8 flex flex-col justify-between"><div class="flex justify-between"><span id="cType" class="text-xl font-bold opacity-10 italic">CARD</span><div class="w-10 h-6 bg-white/5 rounded"></div></div><div id="cNum" class="text-xl tracking-widest font-mono">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20">BAL</div><div id="cBal" class="text-xl font-bold">$ 0.00</div></div><div><div id="cExp" class="text-lg opacity-40 italic">00/00</div></div></div></div><select id="bType" class="w-full p-5 rounded-3xl mb-6 text-center"><option value="visa">VISA</option><option value="mc">MASTERCARD</option><option value="mir">МИР</option></select><button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Выпустить</button></div>`; }
-
-        function renderCoin() { return `<div class="glass-card p-12 text-center"><div id="coinIcon" class="text-9xl mb-12 transition-all duration-500">🪙</div><div class="flex gap-4"><button onclick="toss('Орел')" class="flex-1 p-6 border border-white/5 rounded-3xl btn-hover">ОРЕЛ</button><button onclick="toss('Решка')" class="flex-1 p-6 border border-white/5 rounded-3xl btn-hover">РЕШКА</button></div></div>`; }
+        function renderCards() { return `<div class="glass-card p-8"><div class="relative w-full aspect-[1.58/1] bg-[#0d0d0d] rounded-[2.5rem] p-10 mb-8 flex flex-col justify-between border border-white/5"><div class="flex justify-between items-start"><span id="cType" class="text-2xl font-bold opacity-10">CARD</span><div class="w-12 h-8 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div></div><div id="cNum" class="text-2xl tracking-[0.2em] font-mono">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20 mb-1 font-bold">BALANCE</div><div id="cBal" class="text-2xl font-bold tracking-tighter">$ 0.00</div></div><div><div id="cExp" class="text-xl opacity-40 italic">00/00</div></div></div></div><select id="bType" class="w-full p-6 rounded-3xl mb-6 text-center"><option value="visa">VISA</option><option value="mc">MASTERCARD</option><option value="mir">МИР</option></select><button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Генерировать</button></div>`; }
 
         // --- ЛОГИКА ---
         function hammer(el, val) {
@@ -114,48 +124,61 @@
                 const s = document.createElement('span');
                 s.innerHTML = c === ' ' ? '&nbsp;' : c;
                 s.className = 'hammer-char';
-                s.style.animationDelay = `${i * 0.03}s`;
+                s.style.animationDelay = `${i * 0.02}s`;
                 el.appendChild(s);
             });
         }
 
-        function genNumber() {
-            const min = +document.getElementById('minN').value;
-            const max = +document.getElementById('maxN').value;
-            hammer(document.getElementById('resNum'), Math.floor(Math.random()*(max-min+1))+min);
+        function genNick() {
+            const lang = document.getElementById('nickLang').value;
+            const type = document.getElementById('nickType').value;
+            const db = NickData[lang];
+            let res = "";
+            
+            if(type === 'mix') {
+                res = db.pre[Math.floor(Math.random()*db.pre.length)] + 
+                      db.mid[Math.floor(Math.random()*db.mid.length)] + 
+                      (Math.random() > 0.5 ? db.post[Math.floor(Math.random()*db.post.length)] : "");
+            } else {
+                res = db.mid[Math.floor(Math.random()*db.mid.length)] + 
+                      Math.floor(Math.random()*99);
+            }
+            hammer(document.getElementById('resNick'), res);
+        }
+
+        function copyText(id) {
+            const text = document.getElementById(id).innerText;
+            if(text === "..." || text === "****") return;
+            navigator.clipboard.writeText(text);
+            alert("Скопировано: " + text);
         }
 
         function genPass() {
             const len = +document.getElementById('passLen').value;
-            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
             let ret = "";
             for (let i = 0; i < len; ++i) ret += charset.charAt(Math.floor(Math.random() * charset.length));
             hammer(document.getElementById('resPass'), ret);
-        }
-
-        function genNick() {
-            const len = Math.min(+document.getElementById('nickLen').value, 10);
-            const lang = document.getElementById('nickLang').value;
-            const c = lang === 'en' ? "bcdfghjklmnpqrstvwxyz" : "бвгджзклмнпрстфхцчшщ";
-            const v = lang === 'en' ? "aeiou" : "аеиоуюя";
-            let res = "";
-            for(let i=0; i<len; i++) res += (i%2===0 ? c : v)[Math.floor(Math.random()*(i%2===0?c:v).length)];
-            hammer(document.getElementById('resNick'), res.charAt(0).toUpperCase() + res.slice(1));
         }
 
         function genQR() {
             const text = document.getElementById('qrText').value;
             const qrDiv = document.getElementById('qrcode');
             if(!text) return;
-            qrDiv.innerHTML = "";
-            qrDiv.classList.remove('hidden');
+            qrDiv.innerHTML = ""; qrDiv.classList.remove('hidden');
             new QRCode(qrDiv, { text: text, width: 200, height: 200, colorDark: "#000", colorLight: "#fff" });
         }
 
         function genBall() {
-            const answers = ["Да", "Нет", "Возможно", "Никак", "Никогда", "Всегда"];
+            const answers = ["Да", "Нет", "Возможно", "Никак", "Никогда", "Всегда", "Конечно", "Вряд ли"];
             if(!document.getElementById('ballQuest').value) return;
             hammer(document.getElementById('resBall'), answers[Math.floor(Math.random()*answers.length)]);
+        }
+
+        function genNumber() {
+            const min = +document.getElementById('minN').value;
+            const max = +document.getElementById('maxN').value;
+            hammer(document.getElementById('resNum'), Math.floor(Math.random()*(max-min+1))+min);
         }
 
         function genCard() {
@@ -170,26 +193,13 @@
             hammer(document.getElementById('cBal'), (type === 'mir' ? "₽ " : "$ ") + bal);
         }
 
-        function toss(bet) {
-            const icon = document.getElementById('coinIcon');
-            icon.style.transform = "rotateY(720deg) scale(0.5)";
-            setTimeout(() => {
-                const side = Math.random() > 0.5 ? 'Орел' : 'Решка';
-                icon.innerText = side === 'Орел' ? '🦅' : '🪙';
-                icon.style.transform = "rotateY(0deg) scale(1)";
-                icon.style.filter = side === bet ? "none" : "grayscale(1) brightness(0.5)";
-            }, 500);
-        }
-
         function createSnow() {
             const container = document.getElementById('snow-container');
             for (let i = 0; i < 40; i++) {
-                const s = document.createElement('div');
-                s.className = 'snowflake';
+                const s = document.createElement('div'); s.className = 'snowflake';
                 const size = Math.random() * 3 + 2 + 'px';
                 s.style.width = size; s.style.height = size;
                 s.style.left = Math.random() * 100 + 'vw';
-                s.style.top = '-5vh';
                 s.style.animation = `fall ${Math.random()*10+10}s linear infinite`;
                 s.style.animationDelay = `-${Math.random()*20}s`;
                 container.appendChild(s);
