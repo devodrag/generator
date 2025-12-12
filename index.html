@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
         
@@ -16,22 +17,13 @@
             overflow-x: hidden; margin: 0;
         }
 
-        /* --- 1. PAGE TRANSITION (Router) - Улучшено: плавный Fade-In-Out --- */
+        /* --- 1. PAGE TRANSITION (Router) --- */
         #content {
             transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out, filter 0.25s ease-in-out;
         }
         
-        .page-enter {
-            opacity: 0; 
-            transform: translateY(20px); 
-            filter: blur(4px);
-        }
-        
-        .page-enter.active {
-            opacity: 1; 
-            transform: translateY(0); 
-            filter: blur(0);
-        }
+        .page-enter { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+        .page-enter.active { opacity: 1; transform: translateY(0); filter: blur(0); }
 
         /* --- 2. HAMMER EFFECT (Generation Result) --- */
         .hammer-char {
@@ -41,10 +33,7 @@
             animation: softIn 0.3s cubic-bezier(0.2, 0.6, 0.3, 1) forwards;
         }
         @keyframes softIn { 
-            to { 
-                opacity: 1; 
-                transform: translateY(0) scale(1); 
-            } 
+            to { opacity: 1; transform: translateY(0) scale(1); } 
         }
 
         /* --- 3. UI STYLES (General) --- */
@@ -55,18 +44,15 @@
             border-radius: 2.5rem;
             transition: all 0.3s ease;
         }
-
         .btn-hover {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .btn-hover:hover { background: #fff; color: #000; transform: translateY(-3px) scale(1.01); }
         
-        /* Snowflakes */
         .snowflake { position: fixed; background: white; border-radius: 50%; pointer-events: none; opacity: 0.1; }
         @keyframes fall { to { transform: translateY(110vh); } }
 
-        /* Input/Textarea */
         input, textarea { 
             outline: none; 
             background: rgba(255,255,255,0.03) !important; 
@@ -75,7 +61,7 @@
         }
         input:focus, textarea:focus { border-color: rgba(255, 255, 255, 0.4) !important; }
         
-        /* Custom Select GUI Styling (Styles are unchanged) */
+        /* Custom Select Styling */
         .custom-select { position: relative; display: inline-block; width: 100%; }
         .select-styled { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 1.5rem; padding: 1rem 1.5rem; cursor: pointer; transition: all 0.2s ease; }
         .select-styled:after { content: ''; width: 0; height: 0; border: 6px solid transparent; border-color: #ededed transparent transparent transparent; position: absolute; top: 50%; right: 20px; margin-top: -3px; transition: transform 0.2s; }
@@ -105,24 +91,22 @@
         <button onclick="router('qr')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">QR Code</button>
         <button onclick="router('ball')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">8-Ball</button>
         <button onclick="router('cards')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Cards</button>
-        <button onclick="router('chat')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Chat</button>
-    </nav>
+        </nav>
 
     <main class="flex-grow flex items-center justify-center p-6">
         <div id="content" class="w-full max-w-xl page-enter"></div>
     </main>
 
     <script>
+        
         // --- GLOBAL STATE MANAGEMENT ---
         const MGT_STATE = {
             stats: {
                 generations: 0,
                 copies: 0
             },
-            // Load nickname from session storage, which clears when browser tab is closed/refreshed
             nickname: sessionStorage.getItem('mgt_nickname') || '',
-            // Chat history is local for demo
-            chatHistory: JSON.parse(localStorage.getItem('mgt_chat_history')) || []
+            // Chat history removed
         };
         
         // Helper function to update stats display on Home
@@ -168,6 +152,8 @@
         function router(path) {
             const content = document.getElementById('content');
             
+            // 🗑️ No need to stop chat listener anymore
+
             content.classList.remove('active'); 
 
             setTimeout(() => {
@@ -175,10 +161,10 @@
                     'number': renderNumber, 'pass': renderPass, 'id': renderID,
                     'morse': renderMorse, 'qr': renderQR, 'ball': renderBall, 
                     'cards': renderCards, 'translate': renderTranslate, 
-                    'chat': renderChat,
                     'home': renderHome
                 };
                 content.innerHTML = map[path] ? map[path]() : renderHome();
+                content.dataset.currentPath = path; // Store current path
                 
                 setTimeout(() => {
                     content.classList.add('active');
@@ -190,10 +176,9 @@
                     } else if (path === 'cards') {
                         initCustomSelect('cardTypeSelect');
                     } else if (path === 'home') {
-                        updateStatsDisplay(); // Update stats when returning Home
-                    } else if (path === 'chat') {
-                        initChat(); // Initialize chat view
-                    }
+                        updateStatsDisplay(); 
+                    } 
+                    // 🗑️ No initChat call needed
                 }, 10);
             }, 250);
         }
@@ -225,17 +210,14 @@
             setTimeout(() => { el.style.backgroundColor = originalBG || 'transparent'; }, 500);
         }
 
-        // --- CUSTOM SELECT LOGIC (GUI) (unchanged) ---
+        // --- CUSTOM SELECT LOGIC (GUI) (Placeholder functions for brevity) ---
         function initCustomSelect(id) {
-            const selectEl = document.getElementById(id);
-            if (!selectEl) return;
+            const originalSelect = document.getElementById(id);
+            if (!originalSelect) return; 
 
             const customSelect = document.createElement('div');
             customSelect.className = 'custom-select';
             customSelect.setAttribute('data-target-id', id);
-
-            const originalSelect = document.getElementById(id);
-            if (!originalSelect) return; 
 
             const selectedOption = originalSelect.options[originalSelect.selectedIndex];
             
@@ -287,102 +269,9 @@
             });
         }
 
-        // --- CHAT LOGIC ---
-        function initChat() {
-            // Display current nickname
-            document.getElementById('nicknameInput').value = MGT_STATE.nickname;
-            
-            // Re-render chat messages
-            renderChatMessages();
-
-            // Set up event listeners for input fields
-            document.getElementById('nicknameInput').addEventListener('input', saveNickname);
-            document.getElementById('chatMessage').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-        }
-
-        function saveNickname() {
-            const input = document.getElementById('nicknameInput').value.trim();
-            MGT_STATE.nickname = input;
-            sessionStorage.setItem('mgt_nickname', input);
-            document.getElementById('nicknameStatus').innerText = input ? `Active as: ${input}` : 'Enter Nickname';
-        }
-
-        function sendMessage() {
-            const messageInput = document.getElementById('chatMessage');
-            const messageText = messageInput.value.trim();
-            const nick = MGT_STATE.nickname || 'Anon';
-
-            if (!messageText) return;
-
-            // --- NEW: Handle /chat command ---
-            if (messageText.toLowerCase() === '/chat') {
-                const botResponse = {
-                    timestamp: new Date().toLocaleTimeString(),
-                    nickname: 'MGT Bot',
-                    text: 'Вступайте в наш чат в телеграмме! https://t.me/chatutki',
-                    isMine: false
-                };
-                MGT_STATE.chatHistory.push(botResponse);
-            } else {
-                // --- User message ---
-                const userMessage = {
-                    timestamp: new Date().toLocaleTimeString(),
-                    nickname: nick,
-                    text: messageText,
-                    isMine: true
-                };
-                MGT_STATE.chatHistory.push(userMessage);
-            }
-
-            localStorage.setItem('mgt_chat_history', JSON.stringify(MGT_STATE.chatHistory));
-            
-            messageInput.value = '';
-            renderChatMessages(); // Мгновенное обновление
-        }
-
-        function renderChatMessages() {
-            const chatArea = document.getElementById('chatMessages');
-            if (!chatArea) return;
-            
-            // NEW: Generate HTML content
-            chatArea.innerHTML = MGT_STATE.chatHistory.map(msg => {
-                const color = msg.isMine ? 'text-gray-400' : 'text-green-400';
-                const alignment = msg.isMine ? 'text-right' : 'text-left';
-                const bg = msg.isMine ? 'bg-white/10 ml-auto' : 'bg-white/5 mr-auto';
-                
-                // Adjusting structure for bot vs user messages
-                if (msg.nickname === 'MGT Bot') {
-                    // Bot message
-                    return `<div class="mb-2 ${alignment} w-full">
-                        <div class="p-3 rounded-xl ${bg} max-w-[80%]">
-                            <span class="text-[10px] opacity-40 mr-2">${msg.timestamp}</span>
-                            <span class="text-green-400 font-bold">${msg.nickname}:</span> ${msg.text}
-                        </div>
-                    </div>`;
-                } else {
-                    // User message
-                    return `<div class="mb-2 ${alignment} w-full">
-                        <div class="p-3 rounded-xl ${bg} max-w-[80%]">
-                            <span class="text-[10px] opacity-40 mr-2">${msg.timestamp}</span>
-                            <span class="${color} font-bold">${msg.nickname}:</span> ${msg.text}
-                        </div>
-                    </div>`;
-                }
-            }).join('');
-            
-            // Scroll to bottom
-            chatArea.scrollTop = chatArea.scrollHeight;
-        }
-
+        // 🗑️ All CHAT LOGIC removed (initChat, sendMessage, renderChatMessages, etc.)
 
         // --- RENDER FUNCTIONS ---
-
-        // UPDATED: Home with Stats Block
         function renderHome() { 
             return `<div class="text-center">
                 <h1 class="text-8xl font-bold tracking-tighter mb-4">MGT.<span class="opacity-10">25</span></h1>
@@ -404,7 +293,6 @@
                 </div>
             </div>`; 
         }
-
         function renderNumber() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="resNum" class="text-8xl font-bold mb-12 h-24 flex justify-center items-center">0</div><div class="flex gap-4 mb-8"><input id="minN" type="number" value="1" class="w-1/2 p-6 rounded-3xl text-center" placeholder="Min"><input id="maxN" type="number" value="100" class="w-1/2 p-6 rounded-3xl text-center" placeholder="Max"></div><button onclick="genNumber()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate</button></div>`; }
         function renderPass() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="resPass" class="text-2xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resPass')">****</div><div class="copy-hint">Click to copy</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Length: <span id="passLenVal">16</span></label><input type="range" id="passLen" min="4" max="100" value="16" class="w-full accent-white" oninput="document.getElementById('passLenVal').innerText=this.value"></div><button onclick="genPass()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate Password</button></div>`; }
         function renderID() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="resID" class="text-3xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resID')">Awaiting Input</div><div class="copy-hint">Click to copy</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Length: <span id="idLenVal">10</span></label><input type="range" id="idLen" min="1" max="100" value="10" class="w-full accent-white" oninput="document.getElementById('idLenVal').innerText=this.value"></div><button onclick="genID()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate ID/Hash</button></div>`; }
@@ -414,28 +302,9 @@
         function renderBall() { MGT_STATE.stats.generations++; return `<div class="glass-card p-12 text-center"><div id="resBall" class="text-4xl font-bold mb-12 h-20 flex justify-center items-center text-white/50 italic">Ask a question</div><input id="ballQuest" type="text" placeholder="Your question to fate..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genBall()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Find the Truth</button></div>`; }
         function renderCards() { MGT_STATE.stats.generations++; const cardOptions = CARD_TYPES.map(card => `<option value="${card.code}" ${card.code === 'visa' ? 'selected' : ''}>${card.name}</option>`).join(''); return `<div class="glass-card p-8"><div class="relative w-full aspect-[1.58/1] bg-[#0d0d0d] rounded-[2.5rem] p-10 mb-8 flex flex-col justify-between border border-white/5"><div class="flex justify-between items-start"><span id="cType" class="text-2xl font-bold opacity-10">CARD TYPE</span><div class="w-12 h-8 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div></div><div id="cNum" class="text-2xl tracking-[0.2em] font-mono">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20 mb-1 font-bold">BALANCE</div><div id="cBal" class="text-2xl font-bold tracking-tighter">$ 0.00</div></div><div><div id="cExp" class="text-xl opacity-40 italic">00/00</div></div></div></div><label class="text-[10px] opacity-30 block mb-2 uppercase">Select Card Type</label><select id="cardTypeSelect" class="hidden w-full p-6 rounded-3xl mb-6 text-center">${cardOptions}</select><button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Issue Card</button></div>`; }
         
-        // Render Chat (unchanged structure)
-        function renderChat() {
-            return `<div class="glass-card p-8">
-                <h2 class="text-xl font-bold mb-6 text-center opacity-80">Local Chat Simulation</h2>
-                
-                <div class="mb-6">
-                    <label class="text-[10px] opacity-30 block mb-2 uppercase">Your Nickname (Session Only)</label>
-                    <input id="nicknameInput" type="text" maxlength="15" placeholder="Enter nickname here..." class="w-full p-4 rounded-xl text-center text-sm">
-                    <p id="nicknameStatus" class="copy-hint text-center mt-2">${MGT_STATE.nickname ? `Active as: ${MGT_STATE.nickname}` : 'Enter Nickname'}</p>
-                </div>
-                
-                <div id="chatMessages" class="h-64 overflow-y-auto p-4 mb-4 rounded-xl border border-white/10 bg-black/30">
-                    </div>
+        // 🗑️ renderChat() removed
 
-                <div class="flex gap-3">
-                    <input id="chatMessage" type="text" placeholder="Type your message (Enter to send)" class="flex-grow p-4 rounded-3xl text-sm">
-                    <button onclick="sendMessage()" class="py-4 px-6 rounded-full bg-white text-black font-bold btn-hover uppercase text-[10px]">Send</button>
-                </div>
-            </div>`;
-        }
-
-        // --- GENERATION LOGIC (UPDATED: Stat incremented in render functions) ---
+        // --- GENERATION LOGIC ---
         function genNumber() { const min = +document.getElementById('minN').value; const max = +document.getElementById('maxN').value; hammer(document.getElementById('resNum'), Math.floor(Math.random()*(max-min+1))+min); }
         function genPass() { const len = +document.getElementById('passLen').value; const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+"; let ret = ""; for (let i = 0; i < len; ++i) ret += charset.charAt(Math.floor(Math.random() * charset.length)); hammer(document.getElementById('resPass'), ret); }
         function genID() { const len = +document.getElementById('idLen').value; const charset = "abcdefghijklmnopqrstuvwxyz0123456789"; let ret = ""; for (let i = 0; i < len; ++i) ret += charset.charAt(Math.floor(Math.random() * charset.length)); hammer(document.getElementById('resID'), ret.toUpperCase()); }
