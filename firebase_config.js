@@ -1,4 +1,4 @@
-// ФАЙЛ: firebase_config.js
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyAdj5MqUHhk25tHC2BM6CZoI939mApJQHg",
