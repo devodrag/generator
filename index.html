@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gen2025 | Neural Minimalist</title>
+    <title>Gen2025 | Minimalist Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
         
@@ -15,17 +16,17 @@
             overflow-x: hidden; margin: 0;
         }
 
-        /* Плавное проявление контента */
-        .page-transition { animation: slideIn 0.5s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
+        /* Page Transition */
+        .page-transition { animation: slideIn 0.4s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(15px) scale(0.98); filter: blur(10px); }
-            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+            from { opacity: 0; transform: translateY(15px); filter: blur(8px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
 
-        /* Эффект "Молотка" */
+        /* Hammer Effect */
         .hammer-char {
-            display: inline-block; opacity: 0; transform: scale(2.5);
-            animation: hammerIn 0.12s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            display: inline-block; opacity: 0; transform: scale(1.5);
+            animation: hammerIn 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
         @keyframes hammerIn { to { opacity: 1; transform: scale(1); } }
 
@@ -37,7 +38,7 @@
         }
 
         .btn-hover {
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .btn-hover:hover { background: #fff; color: #000; transform: translateY(-2px); }
@@ -45,8 +46,62 @@
         .snowflake { position: fixed; background: white; border-radius: 50%; pointer-events: none; opacity: 0.1; }
         @keyframes fall { to { transform: translateY(110vh); } }
 
-        input, select { outline: none; background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
+        input, textarea { outline: none; background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
         
+        /* Custom Select GUI Styling */
+        .custom-select {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .select-styled {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 1.5rem; /* 2.5rem */
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .select-styled:after {
+            content: '';
+            width: 0; height: 0;
+            border: 6px solid transparent;
+            border-color: #ededed transparent transparent transparent;
+            position: absolute;
+            top: 50%; right: 20px;
+            margin-top: -3px;
+            transition: transform 0.2s;
+        }
+
+        .select-styled.active:after {
+            transform: translateY(-50%) rotate(-180deg);
+        }
+
+        .select-options {
+            display: none;
+            position: absolute;
+            top: 100%; left: 0; right: 0;
+            z-index: 10;
+            background: #1c1c1c;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            margin-top: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .select-options li {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .select-options li:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
         .copy-hint { font-size: 10px; color: rgba(255,255,255,0.2); margin-top: 10px; cursor: pointer; }
     </style>
 </head>
@@ -55,13 +110,15 @@
     <div id="snow-container"></div>
 
     <nav class="p-6 flex flex-wrap justify-center gap-4 md:gap-8 border-b border-white/5 bg-black/50 backdrop-blur-xl z-50">
-        <button onclick="router('home')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Меню</button>
-        <button onclick="router('number')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Числа</button>
-        <button onclick="router('pass')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Пароли</button>
-        <button onclick="router('nick')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Ники</button>
-        <button onclick="router('qr')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">QR</button>
-        <button onclick="router('ball')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Шар</button>
-        <button onclick="router('cards')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Карты</button>
+        <button onclick="router('home')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Main</button>
+        <button onclick="router('number')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Number</button>
+        <button onclick="router('pass')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Password</button>
+        <button onclick="router('id')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">ID/Hash</button>
+        <button onclick="router('morse')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Morse</button>
+        <button onclick="router('translate')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition font-bold">Translator</button>
+        <button onclick="router('qr')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">QR Code</button>
+        <button onclick="router('ball')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Magic 8</button>
+        <button onclick="router('cards')" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 transition">Cards</button>
     </nav>
 
     <main class="flex-grow flex items-center justify-center p-6">
@@ -69,55 +126,55 @@
     </main>
 
     <script>
-        // --- ДАННЫЕ ДЛЯ "НЕЙРО" НИКОВ ---
-        const NickData = {
-            en: {
-                pre: ["Neon", "Dark", "Cyber", "Mega", "Ultra", "Frost", "Void", "Shadow", "Quantum", "Ghost", "Alpha", "Lunar"],
-                mid: ["Hunter", "Viper", "Dragon", "Storm", "Rider", "Soul", "Edge", "Zero", "Core", "Flame", "Knight", "Nova"],
-                post: ["_x", "77", "Prime", "Dev", "God", "Elite", "Force", "Static", "Zen", "Shift"]
-            },
-            ru: {
-                pre: ["Кибер", "Мега", "Атом", "Нейро", "Тень", "Квант", "Зеро", "Альфа", "Техно", "Крипто"],
-                mid: ["Охотник", "Волк", "Дракон", "Шторм", "Призрак", "Зверь", "Клинок", "Титан", "Демон"],
-                post: ["_рф", "777", "Топ", "Про", "Лорд", "Скорп", "Мастер"]
-            }
+        // --- MORSE CODE DATABASE ---
+        const MORSE_CODE = {
+            'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
+            'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
+            'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+            'Y': '-.--', 'Z': '--..',
+            '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....',
+            '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+            '.': '.-.-.-', ',': '--..--', '?': '..--..', '/': '-..-.', '-': '-....-', '(': '-.--.', ')': '-.--.-',
+            ' ': '/' 
         };
+        const MORSE_DECODE = {};
+        for (const key in MORSE_CODE) { MORSE_DECODE[MORSE_CODE[key]] = key; }
 
+        // --- TRANSLATION DATA ---
+        const LANGUAGES = [
+            { code: 'ru', name: 'Russian' },
+            { code: 'en', name: 'English' },
+            { code: 'de', name: 'German' },
+            { code: 'fr', name: 'French' },
+            { code: 'zh', name: 'Chinese' },
+            { code: 'es', name: 'Spanish' },
+            { code: 'it', name: 'Italian' }
+        ];
+
+        // --- CORE FUNCTIONS ---
         function router(path) {
             const content = document.getElementById('content');
             content.style.opacity = '0';
             setTimeout(() => {
-                switch(path) {
-                    case 'number': content.innerHTML = renderNumber(); break;
-                    case 'pass': content.innerHTML = renderPass(); break;
-                    case 'nick': content.innerHTML = renderNick(); break;
-                    case 'qr': content.innerHTML = renderQR(); break;
-                    case 'ball': content.innerHTML = renderBall(); break;
-                    case 'cards': content.innerHTML = renderCards(); break;
-                    default: content.innerHTML = renderHome();
-                }
+                const map = {
+                    'number': renderNumber, 'pass': renderPass, 'id': renderID,
+                    'morse': renderMorse, 'qr': renderQR, 'ball': renderBall, 
+                    'cards': renderCards, 'translate': renderTranslate, 'home': renderHome
+                };
+                content.innerHTML = map[path] ? map[path]() : renderHome();
                 content.classList.remove('page-transition');
                 void content.offsetWidth;
                 content.classList.add('page-transition');
                 content.style.opacity = '1';
+                
+                // Initialize custom select box for Translator page
+                if (path === 'translate') {
+                    initCustomSelect('fromLangSelect');
+                    initCustomSelect('toLangSelect');
+                }
             }, 200);
         }
 
-        function renderHome() { return `<div class="text-center"><h1 class="text-8xl font-bold tracking-tighter mb-4">GEN<span class="opacity-10">.</span>25</h1><p class="text-white/20 uppercase tracking-[1em] text-[9px]">The Final Generation Tool</p></div>`; }
-
-        function renderNick() { return `<div class="glass-card p-12 text-center"><div id="resNick" class="text-5xl font-bold mb-8 h-16 flex justify-center items-center tracking-tighter cursor-pointer" onclick="copyText('resNick')">...</div><div class="copy-hint">Нажми на ник, чтобы скопировать</div><div class="mt-8 grid grid-cols-2 gap-4"><select id="nickLang" class="p-5 rounded-3xl"><option value="en">English AI</option><option value="ru">Russian AI</option></select><select id="nickType" class="p-5 rounded-3xl"><option value="mix">Сложный</option><option value="short">Короткий</option></select></div><button onclick="genNick()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Сгенерировать ник</button></div>`; }
-
-        function renderPass() { return `<div class="glass-card p-12 text-center"><div id="resPass" class="text-2xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resPass')">****</div><div class="copy-hint">Нажми на пароль, чтобы скопировать</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Символов: <span id="passLenVal">16</span></label><input type="range" id="passLen" min="4" max="64" value="16" class="w-full accent-white" oninput="document.getElementById('passLenVal').innerText=this.value"></div><button onclick="genPass()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Создать пароль</button></div>`; }
-
-        function renderQR() { return `<div class="glass-card p-12 text-center"><div id="qrcode" class="flex justify-center mb-8 p-4 bg-white rounded-3xl w-fit mx-auto hidden transition-all"></div><input id="qrText" type="text" placeholder="Вставьте ссылку сюда..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genQR()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Создать QR-код</button></div>`; }
-
-        function renderBall() { return `<div class="glass-card p-12 text-center"><div id="resBall" class="text-4xl font-bold mb-12 h-20 flex justify-center items-center text-white/50 italic">Спроси меня</div><input id="ballQuest" type="text" placeholder="Твой вопрос судьбе..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genBall()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Узнать правду</button></div>`; }
-
-        function renderNumber() { return `<div class="glass-card p-12 text-center"><div id="resNum" class="text-8xl font-bold mb-12 h-24 flex justify-center items-center">0</div><div class="flex gap-4 mb-8"><input id="minN" type="number" value="1" class="w-1/2 p-6 rounded-3xl text-center"><input id="maxN" type="number" value="100" class="w-1/2 p-6 rounded-3xl text-center"></div><button onclick="genNumber()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Ударить молотком</button></div>`; }
-
-        function renderCards() { return `<div class="glass-card p-8"><div class="relative w-full aspect-[1.58/1] bg-[#0d0d0d] rounded-[2.5rem] p-10 mb-8 flex flex-col justify-between border border-white/5"><div class="flex justify-between items-start"><span id="cType" class="text-2xl font-bold opacity-10">CARD</span><div class="w-12 h-8 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div></div><div id="cNum" class="text-2xl tracking-[0.2em] font-mono">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20 mb-1 font-bold">BALANCE</div><div id="cBal" class="text-2xl font-bold tracking-tighter">$ 0.00</div></div><div><div id="cExp" class="text-xl opacity-40 italic">00/00</div></div></div></div><select id="bType" class="w-full p-6 rounded-3xl mb-6 text-center"><option value="visa">VISA</option><option value="mc">MASTERCARD</option><option value="mir">МИР</option></select><button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Генерировать</button></div>`; }
-
-        // --- ЛОГИКА ---
         function hammer(el, val) {
             el.innerHTML = '';
             [...val.toString()].forEach((c, i) => {
@@ -129,38 +186,222 @@
             });
         }
 
-        function genNick() {
-            const lang = document.getElementById('nickLang').value;
-            const type = document.getElementById('nickType').value;
-            const db = NickData[lang];
-            let res = "";
-            
-            if(type === 'mix') {
-                res = db.pre[Math.floor(Math.random()*db.pre.length)] + 
-                      db.mid[Math.floor(Math.random()*db.mid.length)] + 
-                      (Math.random() > 0.5 ? db.post[Math.floor(Math.random()*db.post.length)] : "");
-            } else {
-                res = db.mid[Math.floor(Math.random()*db.mid.length)] + 
-                      Math.floor(Math.random()*99);
-            }
-            hammer(document.getElementById('resNick'), res);
+        function copyText(id) {
+            const el = document.getElementById(id);
+            const text = el.innerText;
+            if (text === "..." || text === "****" || text === "Awaiting Input" || text === "Encrypted Result" || text === "Translation Result") return;
+            navigator.clipboard.writeText(text.replace(/\s/g, ''));
+            el.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+            setTimeout(() => { el.style.backgroundColor = 'transparent'; }, 500);
         }
 
-        function copyText(id) {
-            const text = document.getElementById(id).innerText;
-            if(text === "..." || text === "****") return;
-            navigator.clipboard.writeText(text);
-            alert("Скопировано: " + text);
+        // --- CUSTOM SELECT LOGIC (GUI) ---
+        function initCustomSelect(id) {
+            const selectEl = document.getElementById(id);
+            if (!selectEl) return;
+
+            const customSelect = document.createElement('div');
+            customSelect.className = 'custom-select';
+            customSelect.setAttribute('data-target-id', id);
+
+            const selectedOption = selectEl.options[selectEl.selectedIndex];
+            
+            const styledSelect = document.createElement('div');
+            styledSelect.className = 'select-styled';
+            styledSelect.innerText = selectedOption.text;
+            styledSelect.setAttribute('data-value', selectedOption.value);
+            styledSelect.onclick = function() {
+                const active = document.querySelector('.select-styled.active');
+                if (active && active !== this) {
+                    active.classList.remove('active');
+                    document.querySelector(`[data-target-id="${active.parentNode.getAttribute('data-target-id')}"] .select-options`).style.display = 'none';
+                }
+                this.classList.toggle('active');
+                const options = this.nextElementSibling;
+                options.style.display = options.style.display === 'block' ? 'none' : 'block';
+            };
+
+            const optionsList = document.createElement('ul');
+            optionsList.className = 'select-options';
+
+            Array.from(selectEl.options).forEach(option => {
+                const listItem = document.createElement('li');
+                listItem.innerText = option.text;
+                listItem.setAttribute('data-value', option.value);
+                listItem.onclick = function() {
+                    styledSelect.innerText = this.innerText;
+                    styledSelect.setAttribute('data-value', this.getAttribute('data-value'));
+                    styledSelect.classList.remove('active');
+                    optionsList.style.display = 'none';
+
+                    // Update the hidden native select element
+                    selectEl.value = this.getAttribute('data-value');
+                };
+                optionsList.appendChild(listItem);
+            });
+
+            customSelect.appendChild(styledSelect);
+            customSelect.appendChild(optionsList);
+            selectEl.parentNode.replaceChild(customSelect, selectEl);
+
+            document.addEventListener('click', function(e) {
+                if (!customSelect.contains(e.target)) {
+                    styledSelect.classList.remove('active');
+                    optionsList.style.display = 'none';
+                }
+            });
+        }
+
+
+        // --- RENDER FUNCTIONS ---
+        function renderHome() { return `<div class="text-center"><h1 class="text-8xl font-bold tracking-tighter mb-4">GEN<span class="opacity-10">.</span>25</h1><p class="text-white/20 uppercase tracking-[1em] text-[9px]">Random Generator Suite</p></div>`; }
+
+        function renderNumber() { return `<div class="glass-card p-12 text-center"><div id="resNum" class="text-8xl font-bold mb-12 h-24 flex justify-center items-center">0</div><div class="flex gap-4 mb-8"><input id="minN" type="number" value="1" class="w-1/2 p-6 rounded-3xl text-center"><input id="maxN" type="number" value="100" class="w-1/2 p-6 rounded-3xl text-center"></div><button onclick="genNumber()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate</button></div>`; }
+
+        function renderPass() { return `<div class="glass-card p-12 text-center"><div id="resPass" class="text-2xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resPass')">****</div><div class="copy-hint">Click to Copy</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Length: <span id="passLenVal">16</span></label><input type="range" id="passLen" min="4" max="100" value="16" class="w-full accent-white" oninput="document.getElementById('passLenVal').innerText=this.value"></div><button onclick="genPass()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate Password</button></div>`; }
+
+        function renderID() { return `<div class="glass-card p-12 text-center"><div id="resID" class="text-3xl font-mono mb-8 break-all min-h-[4rem] cursor-pointer" onclick="copyText('resID')">Awaiting Input</div><div class="copy-hint">Click to Copy</div><div class="mt-8"><label class="text-[10px] opacity-30 block mb-4 uppercase">Length: <span id="idLenVal">10</span></label><input type="range" id="idLen" min="1" max="100" value="10" class="w-full accent-white" oninput="document.getElementById('idLenVal').innerText=this.value"></div><button onclick="genID()" class="w-full mt-8 py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate ID</button></div>`; }
+
+        function renderMorse() { 
+            return `<div class="glass-card p-12"><h2 class="text-xl font-bold mb-6 text-center opacity-80">Morse Encrypt / Decrypt</h2>
+                <div class="mb-8">
+                    <label class="text-[10px] opacity-30 block mb-2 uppercase">Text to Morse</label>
+                    <textarea id="morseText" class="w-full p-4 rounded-xl min-h-[80px] text-sm" placeholder="Enter text (e.g., SOS)"></textarea>
+                    <div id="morseEncryptRes" class="text-lg font-mono mt-3 break-all min-h-[1.5rem] cursor-pointer" onclick="copyText('morseEncryptRes')">Encrypted Result</div>
+                    <button onclick="encryptMorse()" class="w-full mt-4 py-4 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Encrypt</button>
+                </div>
+                <div class="pt-8 border-t border-white/5">
+                    <label class="text-[10px] opacity-30 block mb-2 uppercase">Morse to Text</label>
+                    <textarea id="morseCode" class="w-full p-4 rounded-xl min-h-[80px] text-lg font-mono" placeholder="Enter code (e.g., ... --- ...)"></textarea>
+                    <div id="morseDecryptRes" class="text-xl font-bold mt-3 min-h-[1.5rem] cursor-pointer" onclick="copyText('morseDecryptRes')">Decrypted Result</div>
+                    <button onclick="decryptMorse()" class="w-full mt-4 py-4 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Decrypt</button>
+                </div>
+            </div>`; 
+        }
+
+        function renderTranslate() {
+            const langOptions = LANGUAGES.map(lang => `<option value="${lang.code}" ${lang.code === 'ru' ? 'selected' : ''}>${lang.name}</option>`).join('');
+            const targetLangOptions = LANGUAGES.map(lang => `<option value="${lang.code}" ${lang.code === 'en' ? 'selected' : ''}>${lang.name}</option>`).join('');
+
+            return `<div class="glass-card p-12">
+                <h2 class="text-xl font-bold mb-6 text-center opacity-80">Universal Translator</h2>
+                
+                <div class="flex gap-4 mb-6">
+                    <div class="w-1/2">
+                        <label class="text-[10px] opacity-30 block mb-2 uppercase">From Language</label>
+                        <select id="fromLangSelect" class="hidden">${langOptions}</select>
+                    </div>
+
+                    <div class="w-1/2">
+                        <label class="text-[10px] opacity-30 block mb-2 uppercase">To Language</label>
+                        <select id="toLangSelect" class="hidden">${targetLangOptions}</select>
+                    </div>
+                </div>
+
+                <textarea id="sourceText" class="w-full p-4 rounded-xl min-h-[100px] text-sm mb-4" placeholder="Enter text to translate..."></textarea>
+                
+                <div id="translateResult" class="text-xl font-bold mt-3 mb-6 min-h-[1.5rem] cursor-pointer text-center" onclick="copyText('translateResult')">Translation Result</div>
+                
+                <button onclick="translateText()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Translate</button>
+            </div>`;
+        }
+
+        function renderQR() { return `<div class="glass-card p-12 text-center"><div id="qrcode" class="flex justify-center mb-8 p-4 bg-white rounded-3xl w-fit mx-auto hidden transition-all"></div><input id="qrText" type="text" placeholder="Enter URL/Text here..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genQR()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Generate QR</button></div>`; }
+
+        function renderBall() { return `<div class="glass-card p-12 text-center"><div id="resBall" class="text-4xl font-bold mb-12 h-20 flex justify-center items-center text-white/50 italic">Ask a Question</div><input id="ballQuest" type="text" placeholder="Your question..." class="w-full p-6 rounded-3xl mb-6 text-center text-sm border-white/10"><button onclick="genBall()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Seek Answer</button></div>`; }
+
+        function renderCards() { return `<div class="glass-card p-8"><div class="relative w-full aspect-[1.58/1] bg-[#0d0d0d] rounded-[2.5rem] p-10 mb-8 flex flex-col justify-between border border-white/5"><div class="flex justify-between items-start"><span id="cType" class="text-2xl font-bold opacity-10">CARD TYPE</span><div class="w-12 h-8 bg-gradient-to-br from-white/10 to-transparent rounded-lg"></div></div><div id="cNum" class="text-2xl tracking-[0.2em] font-mono">0000 0000 0000 0000</div><div class="flex justify-between items-end"><div><div class="text-[8px] opacity-20 mb-1 font-bold">BALANCE</div><div id="cBal" class="text-2xl font-bold tracking-tighter">₽ 0.00</div></div><div><div id="cExp" class="text-xl opacity-40 italic">00/00</div></div></div></div><select id="bType" class="w-full p-6 rounded-3xl mb-6 text-center"><option value="visa">VISA</option><option value="mc">MASTERCARD</option><option value="mir">MIR</option></select><button onclick="genCard()" class="w-full py-6 rounded-full bg-white text-black font-bold btn-hover uppercase tracking-widest text-[10px]">Issue Card</button></div>`; }
+
+
+        // --- GENERATION LOGIC ---
+        function genNumber() {
+            const min = +document.getElementById('minN').value;
+            const max = +document.getElementById('maxN').value;
+            hammer(document.getElementById('resNum'), Math.floor(Math.random()*(max-min+1))+min);
         }
 
         function genPass() {
             const len = +document.getElementById('passLen').value;
-            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
             let ret = "";
             for (let i = 0; i < len; ++i) ret += charset.charAt(Math.floor(Math.random() * charset.length));
             hammer(document.getElementById('resPass'), ret);
         }
 
+        function genID() {
+            const len = +document.getElementById('idLen').value;
+            const charset = "abcdefghijklmnopqrstuvwxyz0123456789";
+            let ret = "";
+            for (let i = 0; i < len; ++i) ret += charset.charAt(Math.floor(Math.random() * charset.length));
+            hammer(document.getElementById('resID'), ret.toUpperCase());
+        }
+
+        function encryptMorse() {
+            const text = document.getElementById('morseText').value.toUpperCase();
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (MORSE_CODE[char]) {
+                    result += MORSE_CODE[char] + ' ';
+                }
+            }
+            hammer(document.getElementById('morseEncryptRes'), result.trim());
+        }
+
+        function decryptMorse() {
+            const code = document.getElementById('morseCode').value.trim();
+            const words = code.split(' / ');
+            let result = '';
+
+            for (let i = 0; i < words.length; i++) {
+                const chars = words[i].split(' ');
+                for (let j = 0; j < chars.length; j++) {
+                    const morseChar = chars[j];
+                    if (MORSE_DECODE[morseChar]) {
+                        result += MORSE_DECODE[morseChar];
+                    }
+                }
+                if (i < words.length - 1) {
+                    result += ' ';
+                }
+            }
+            hammer(document.getElementById('morseDecryptRes'), result);
+        }
+
+        async function translateText() {
+            const sourceText = document.getElementById('sourceText').value;
+            
+            // Get selected language codes from the styled custom selects
+            const fromLang = document.querySelector('[data-target-id="fromLangSelect"] .select-styled').getAttribute('data-value');
+            const toLang = document.querySelector('[data-target-id="toLangSelect"] .select-styled').getAttribute('data-value');
+            
+            const resultEl = document.getElementById('translateResult');
+            
+            if (!sourceText) {
+                hammer(resultEl, "Enter text first.");
+                return;
+            }
+
+            hammer(resultEl, "Translating...");
+            
+            try {
+                // Использование публичного API (LibreTranslate)
+                const response = await axios.post('https://translate.terraprint.co/translate', {
+                    q: sourceText,
+                    source: fromLang,
+                    target: toLang,
+                    format: 'text'
+                });
+
+                const translatedText = response.data.translatedText;
+                hammer(resultEl, translatedText);
+
+            } catch (error) {
+                console.error("Translation Error:", error);
+                hammer(resultEl, "Error: API failed or limit reached.");
+            }
+        }
+        
         function genQR() {
             const text = document.getElementById('qrText').value;
             const qrDiv = document.getElementById('qrcode');
@@ -170,26 +411,21 @@
         }
 
         function genBall() {
-            const answers = ["Да", "Нет", "Возможно", "Никак", "Никогда", "Всегда", "Конечно", "Вряд ли"];
+            const answers = ["Yes", "No", "Maybe", "Unlikely", "Never", "Always", "Of course", "Try again"];
             if(!document.getElementById('ballQuest').value) return;
             hammer(document.getElementById('resBall'), answers[Math.floor(Math.random()*answers.length)]);
         }
 
-        function genNumber() {
-            const min = +document.getElementById('minN').value;
-            const max = +document.getElementById('maxN').value;
-            hammer(document.getElementById('resNum'), Math.floor(Math.random()*(max-min+1))+min);
-        }
-
         function genCard() {
             const type = document.getElementById('bType').value;
-            let bin = type === 'mir' ? "220" + Math.floor(Math.random()*5) : (type === 'visa' ? "4539" : "5167");
+            let bin = type === 'mir' ? "2204" : (type === 'visa' ? "4539" : "5167");
             const rest = Array.from({length: 3}, () => Math.floor(Math.random()*8999+1000)).join(' ');
             const date = Math.floor(Math.random()*12+1).toString().padStart(2,'0') + "/" + Math.floor(Math.random()*30+26);
             const bal = (Math.random()*900+100).toFixed(2);
             document.getElementById('cType').innerText = type.toUpperCase();
             document.getElementById('cExp').innerText = date;
             hammer(document.getElementById('cNum'), `${bin} ${rest}`);
+            
             hammer(document.getElementById('cBal'), (type === 'mir' ? "₽ " : "$ ") + bal);
         }
 
@@ -197,10 +433,10 @@
             const container = document.getElementById('snow-container');
             for (let i = 0; i < 40; i++) {
                 const s = document.createElement('div'); s.className = 'snowflake';
-                const size = Math.random() * 3 + 2 + 'px';
+                const size = Math.random() * 3 + 1 + 'px';
                 s.style.width = size; s.style.height = size;
                 s.style.left = Math.random() * 100 + 'vw';
-                s.style.animation = `fall ${Math.random()*10+10}s linear infinite`;
+                s.style.animation = `fall ${Math.random()*12+8}s linear infinite`;
                 s.style.animationDelay = `-${Math.random()*20}s`;
                 container.appendChild(s);
             }
