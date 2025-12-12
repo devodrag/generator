@@ -3,54 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gen2025 | Multi-Generator</title>
+    <title>Gen2025 | Ultra Minimalist</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&display=swap');
         
         body {
-            background-color: #0a0a0a;
+            background-color: #050505;
             color: #ededed;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Space Grotesk', sans-serif;
             overflow-x: hidden;
         }
 
+        /* Анимация появления страницы */
+        .page-enter {
+            animation: fadeInBlur 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes fadeInBlur {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); filter: blur(10px); }
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+
+        /* Анимация "вбивания" чисел */
+        .hammer-text {
+            display: inline-block;
+            animation: hammerHit 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes hammerHit {
+            0% { transform: scale(2.5); opacity: 0; filter: brightness(3); }
+            100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+        }
+
         .glass-card {
-            background: rgba(23, 23, 23, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 1.5rem;
-            transition: all 0.3s ease;
+            background: rgba(18, 18, 18, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 2rem;
         }
 
         .btn-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .btn-hover:hover {
             background: #ffffff;
             color: #000000;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(255,255,255,0.05);
         }
 
-        /* Снежинки */
         .snowflake {
             position: fixed;
             background: white;
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
-            opacity: 0.5;
+            opacity: 0.3;
         }
 
         @keyframes fall {
             to { transform: translateY(100vh); }
         }
 
-        .active-link {
-            border-bottom: 2px solid white;
+        select, input {
+            outline: none;
+            background: rgba(255,255,255,0.03) !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
         }
     </style>
 </head>
@@ -59,159 +80,214 @@
     <div id="snow-container"></div>
 
     <div id="app" class="relative z-10 min-h-screen flex flex-col">
-        <nav class="p-6 flex justify-center gap-8 border-b border-white/5 bg-black/50 sticky top-0 backdrop-blur-md">
-            <button onclick="router('home')" class="hover:text-white transition">Главная</button>
-            <button onclick="router('number')" class="hover:text-white transition">Числа</button>
-            <button onclick="router('names')" class="hover:text-white transition">Имена</button>
-            <button onclick="router('cards')" class="hover:text-white transition">Карты</button>
-            <button onclick="router('coin')" class="hover:text-white transition">Монетка</button>
+        <nav class="p-8 flex justify-center gap-10 border-b border-white/5 bg-black/20 backdrop-blur-xl sticky top-0">
+            <button onclick="router('home')" class="opacity-50 hover:opacity-100 transition">Menu</button>
+            <button onclick="router('number')" class="opacity-50 hover:opacity-100 transition">Numbers</button>
+            <button onclick="router('names')" class="opacity-50 hover:opacity-100 transition">Names</button>
+            <button onclick="router('addr')" class="opacity-50 hover:opacity-100 transition">Address</button>
+            <button onclick="router('cards')" class="opacity-50 hover:opacity-100 transition">Cards</button>
+            <button onclick="router('coin')" class="opacity-50 hover:opacity-100 transition">Coin</button>
         </nav>
 
-        <main class="flex-grow flex items-center justify-center p-4">
-            <div id="content" class="w-full max-w-2xl">
-                </div>
+        <main class="flex-grow flex items-center justify-center p-6">
+            <div id="content" class="w-full max-w-2xl page-enter"></div>
         </main>
-
-        <footer class="p-8 text-center text-white/20 text-sm">
-            &copy; 2025 Minimalist Gen. Developed for GitHub.
-        </footer>
     </div>
 
     <script>
-        // --- ДВИЖОК РОУТИНГА ---
+        // --- ДАННЫЕ ---
+        const DB = {
+            names: {
+                RU: ["Александр Иванов", "Дмитрий Петров", "Елена Соколова", "Мария Кузнецова", "Игорь Смирнов"],
+                US: ["James Wilson", "Robert Miller", "Emily Brown", "Michael Davis", "Sarah Jenkins"],
+                BY: ["Алесь Караткевіч", "Ян Лашкевіч", "Таццяна Сакалова", "Зміцер Вольскі", "Ганна Новік"]
+            },
+            addresses: {
+                RU: "Москва, ул. Тверская, д. ", US: "New York, Broadway Ave, Apt. ",
+                BY: "Минск, пр. Независимости, д. ", NL: "Amsterdam, Damrak Str, ",
+                PL: "Warszawa, ul. Nowy Świat, ", FR: "Paris, Rue de Rivoli, ",
+                IT: "Roma, Via del Corso, ", LT: "Vilnius, Gedimino pr., ", LV: "Riga, Brīvības iela, "
+            }
+        };
+
+        // --- РОУТИНГ ---
         function router(path) {
             const content = document.getElementById('content');
-            window.history.pushState({}, '', `#${path}`);
-            
+            content.classList.remove('page-enter');
+            void content.offsetWidth; // Триггер рефлоу для перезапуска анимации
+            content.classList.add('page-enter');
+
             switch(path) {
-                case 'number': content.innerHTML = renderNumberGen(); break;
-                case 'names': content.innerHTML = renderNamesGen(); break;
-                case 'cards': content.innerHTML = renderCardsGen(); break;
-                case 'coin': content.innerHTML = renderCoinGen(); break;
+                case 'number': content.innerHTML = renderNumber(); break;
+                case 'names': content.innerHTML = renderNames(); break;
+                case 'addr': content.innerHTML = renderAddr(); break;
+                case 'cards': content.innerHTML = renderCards(); break;
+                case 'coin': content.innerHTML = renderCoin(); break;
                 default: content.innerHTML = renderHome();
             }
         }
 
-        // --- ГЕНЕРАТОРЫ ЛОГИКА ---
-        const getRandom = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-        // --- ШАБЛОНЫ СТРАНИЦ ---
+        // --- СТРАНИЦЫ ---
         function renderHome() {
+            return `<div class="text-center"><h1 class="text-6xl font-bold mb-4 tracking-tighter">GEN.2025</h1><p class="opacity-30">Next-gen generation tools</p></div>`;
+        }
+
+        function renderNumber() {
             return `
-                <div class="text-center">
-                    <h1 class="text-5xl font-light mb-6">Gen<span class="font-semibold">2025</span></h1>
-                    <p class="text-white/50 mb-12">Выберите инструмент для генерации данных</p>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div onclick="router('number')" class="glass-card p-6 cursor-pointer hover:bg-white/5">Числа</div>
-                        <div onclick="router('names')" class="glass-card p-6 cursor-pointer hover:bg-white/5">Имена</div>
-                        <div onclick="router('cards')" class="glass-card p-6 cursor-pointer hover:bg-white/5">Карты</div>
-                        <div onclick="router('coin')" class="glass-card p-6 cursor-pointer hover:bg-white/5">Монетка</div>
+                <div class="glass-card p-10 text-center">
+                    <h2 class="text-sm uppercase tracking-widest opacity-40 mb-10">Number Generator</h2>
+                    <div id="resNum" class="text-7xl font-bold mb-10 h-20 flex justify-center items-center">0</div>
+                    <div class="flex gap-4 mb-6">
+                        <input id="minN" type="number" value="1" class="w-1/2 p-4 rounded-xl text-center">
+                        <input id="maxN" type="number" value="1000" class="w-1/2 p-4 rounded-xl text-center">
+                    </div>
+                    <button onclick="genNumber()" class="w-full py-5 rounded-2xl bg-white text-black font-bold btn-hover">GENERATE</button>
+                </div>`;
+        }
+
+        function renderNames() {
+            return `
+                <div class="glass-card p-10 text-center">
+                    <h2 class="text-sm uppercase tracking-widest opacity-40 mb-10">Identity Generator</h2>
+                    <div id="resName" class="text-3xl font-medium mb-10 h-10">...</div>
+                    <div class="grid grid-cols-3 gap-3 mb-6">
+                        <button onclick="genName('RU')" class="p-3 border border-white/10 rounded-xl hover:bg-white/5">RU</button>
+                        <button onclick="genName('US')" class="p-3 border border-white/10 rounded-xl hover:bg-white/5">US</button>
+                        <button onclick="genName('BY')" class="p-3 border border-white/10 rounded-xl hover:bg-white/5">BY</button>
                     </div>
                 </div>`;
         }
 
-        function renderNumberGen() {
+        function renderAddr() {
             return `
-                <div class="glass-card p-8 text-center">
-                    <h2 class="text-2xl mb-6">Генератор чисел</h2>
-                    <input id="minNum" type="number" placeholder="От" class="bg-white/5 border border-white/10 p-3 rounded-lg mb-4 w-full">
-                    <input id="maxNum" type="number" placeholder="До" class="bg-white/5 border border-white/10 p-3 rounded-lg mb-6 w-full">
-                    <div id="resNum" class="text-4xl font-bold mb-6 text-white">-</div>
-                    <button onclick="generateNumber()" class="w-full py-4 rounded-xl bg-white text-black font-semibold btn-hover uppercase tracking-widest">Сгенерировать</button>
-                </div>`;
-        }
-
-        function renderCoinGen() {
-            return `
-                <div class="glass-card p-8 text-center">
-                    <h2 class="text-2xl mb-6">Подброс монетки</h2>
-                    <div class="flex gap-4 mb-8">
-                        <button onclick="bet('Орел')" class="flex-1 p-3 border border-white/10 rounded-lg hover:bg-white/5 transition">Орел</button>
-                        <button onclick="bet('Решка')" class="flex-1 p-3 border border-white/10 rounded-lg hover:bg-white/5 transition">Решка</button>
-                        <button onclick="bet('Ребро')" class="flex-1 p-3 border border-white/10 rounded-lg hover:bg-white/5 transition">Ребро</button>
-                    </div>
-                    <div id="coinRes" class="text-5xl mb-8">🪙</div>
-                    <div id="coinStatus" class="text-white/50">Сделайте ставку</div>
-                </div>`;
-        }
-
-        function renderCardsGen() {
-            return `
-                <div class="glass-card p-8">
-                    <h2 class="text-2xl mb-6 text-center">Генератор карт</h2>
-                    <select id="cardType" class="bg-white/5 border border-white/10 p-3 rounded-lg mb-4 w-full">
-                        <option value="Visa">Visa</option>
-                        <option value="Mastercard">Mastercard</option>
-                        <option value="МИР">МИР</option>
+                <div class="glass-card p-10 text-center">
+                    <h2 class="text-sm uppercase tracking-widest opacity-40 mb-10">Address Locator</h2>
+                    <div id="resAddr" class="text-xl opacity-80 mb-10 min-h-[3rem]">Выберите страну</div>
+                    <select id="country" class="w-full p-4 rounded-xl mb-6">
+                        <option value="RU">Россия</option><option value="US">USA</option>
+                        <option value="BY">Беларусь</option><option value="NL">Netherlands</option>
+                        <option value="PL">Poland</option><option value="IT">Italy</option>
+                        <option value="FR">France</option>
                     </select>
-                    <div id="cardDisplay" class="bg-gradient-to-br from-zinc-800 to-black p-6 rounded-2xl border border-white/10 aspect-[1.6/1] mb-6 flex flex-col justify-between">
-                        <div id="dispType" class="italic font-bold opacity-50 text-xl">CARD</div>
-                        <div id="dispNum" class="text-2xl tracking-widest">**** **** **** ****</div>
-                        <div class="flex justify-between">
-                            <span>Balance: <span id="dispBalance">$0</span></span>
-                            <span>Exp: 12/28</span>
+                    <button onclick="genAddr()" class="w-full py-5 rounded-2xl bg-white text-black font-bold btn-hover">FIND ADDRESS</button>
+                </div>`;
+        }
+
+        function renderCards() {
+            return `
+                <div class="glass-card p-10">
+                    <div id="cardUI" class="relative overflow-hidden w-full aspect-[1.6/1] bg-gradient-to-br from-zinc-800 to-black rounded-3xl p-8 mb-8 border border-white/10">
+                        <div id="cType" class="text-xl font-bold italic opacity-30 mb-8">PAYMENT</div>
+                        <div id="cNum" class="text-2xl tracking-[0.3em] font-mono mb-8 text-white/90">0000 0000 0000 0000</div>
+                        <div class="flex justify-between items-end">
+                            <div><div class="text-[10px] opacity-30 uppercase">Balance</div><div id="cBal" class="text-xl">$0.00</div></div>
+                            <div><div class="text-[10px] opacity-30 uppercase">Expiry</div><div id="cExp" class="text-lg">00/00</div></div>
                         </div>
                     </div>
-                    <button onclick="genCard()" class="w-full py-4 rounded-xl bg-white text-black font-semibold btn-hover">СОЗДАТЬ КАРТУ</button>
+                    <select id="bType" class="w-full p-4 rounded-xl mb-6">
+                        <option value="visa">VISA</option><option value="mc">MASTERCARD</option><option value="mir">МИР</option>
+                    </select>
+                    <button onclick="genCard()" class="w-full py-5 rounded-2xl bg-white text-black font-bold btn-hover">ISSUE CARD</button>
                 </div>`;
         }
 
-        // --- ФУНКЦИИ ГЕНЕРАЦИИ ---
-        function generateNumber() {
-            const min = parseInt(document.getElementById('minNum').value) || 0;
-            const max = parseInt(document.getElementById('maxNum').value) || 100;
-            document.getElementById('resNum').innerText = getRandom(min, max);
+        function renderCoin() {
+            return `
+                <div class="glass-card p-10 text-center">
+                    <h2 class="text-sm uppercase tracking-widest opacity-40 mb-10">Coin Toss</h2>
+                    <div id="coinIcon" class="text-8xl mb-10">🪙</div>
+                    <div class="flex gap-4">
+                        <button onclick="toss('Орел')" class="flex-1 p-4 border border-white/10 rounded-xl hover:bg-white/10">Орел</button>
+                        <button onclick="toss('Решка')" class="flex-1 p-4 border border-white/10 rounded-xl hover:bg-white/10">Решка</button>
+                    </div>
+                </div>`;
         }
 
-        function bet(userChoice) {
-            const status = document.getElementById('coinStatus');
-            const res = document.getElementById('coinRes');
-            const rand = Math.random();
-            let final;
+        // --- ЛОГИКА ---
+        function hammerAnim(element, value) {
+            element.innerHTML = '';
+            const valStr = value.toString();
+            valStr.split('').forEach((char, i) => {
+                const span = document.createElement('span');
+                span.innerText = char;
+                span.className = 'hammer-text';
+                span.style.animationDelay = `${i * 0.05}s`;
+                element.appendChild(span);
+            });
+        }
 
-            if (rand < 0.48) final = 'Орел';
-            else if (rand < 0.96) final = 'Решка';
-            else final = 'Ребро';
+        function genNumber() {
+            const min = parseInt(document.getElementById('minN').value) || 0;
+            const max = parseInt(document.getElementById('maxN').value) || 100;
+            const res = Math.floor(Math.random() * (max - min + 1)) + min;
+            hammerAnim(document.getElementById('resNum'), res);
+        }
 
-            res.classList.add('animate-bounce');
-            setTimeout(() => {
-                res.classList.remove('animate-bounce');
-                res.innerText = final === 'Орел' ? '🦅' : final === 'Решка' ? '🪙' : '📐';
-                status.innerText = (userChoice === final) ? `Вы выиграли! Это ${final}` : `Проигрыш! Это ${final}`;
-            }, 500);
+        function genName(lang) {
+            const names = DB.names[lang];
+            const name = names[Math.floor(Math.random() * names.length)];
+            hammerAnim(document.getElementById('resName'), name);
+        }
+
+        function genAddr() {
+            const c = document.getElementById('country').value;
+            const addr = DB.addresses[c] + Math.floor(Math.random() * 200);
+            hammerAnim(document.getElementById('resAddr'), addr);
         }
 
         function genCard() {
-            const type = document.getElementById('cardType').value;
-            const balance = getRandom(100, 1000);
-            const num = Array.from({length: 4}, () => getRandom(1000, 9999)).join(' ');
+            const type = document.getElementById('bType').value;
+            let bin = "";
             
-            document.getElementById('dispType').innerText = type;
-            document.getElementById('dispNum').innerText = num;
-            document.getElementById('dispBalance').innerText = `$${balance}`;
+            if (type === 'mir') bin = ["2200", "2201", "2202", "2203", "2204"][Math.floor(Math.random()*5)];
+            else if (type === 'visa') bin = "4" + Math.floor(Math.random() * 999).toString().padStart(3, '0');
+            else { // Mastercard
+                bin = Math.random() > 0.5 ? 
+                    (Math.floor(Math.random() * 5) + 51).toString() + Math.floor(Math.random()*99).toString().padStart(2,'0') : 
+                    (Math.floor(Math.random() * (2720 - 2221)) + 2221).toString();
+            }
+
+            const rest = Array.from({length: 3}, () => Math.floor(Math.random() * 8999 + 1000)).join(' ');
+            const fullNum = `${bin} ${rest}`;
+            
+            // Дата: текущий год + (1-5 лет), месяц 01-12
+            const month = Math.floor(Math.random() * 12 + 1).toString().padStart(2, '0');
+            const year = Math.floor(Math.random() * (99 - 25) + 25); // до 2099 года
+
+            document.getElementById('cType').innerText = type.toUpperCase();
+            hammerAnim(document.getElementById('cNum'), fullNum);
+            hammerAnim(document.getElementById('cBal'), `$${(Math.random() * 900 + 100).toFixed(2)}`);
+            document.getElementById('cExp').innerText = `${month}/${year}`;
         }
 
-        // --- ЭФФЕКТ СНЕГА ---
+        function toss(bet) {
+            const icon = document.getElementById('coinIcon');
+            icon.classList.add('hammer-text');
+            setTimeout(() => {
+                const res = Math.random() > 0.5 ? 'Орел' : 'Решка';
+                icon.innerText = res === 'Орел' ? '🦅' : '🪙';
+                icon.classList.remove('hammer-text');
+                if(res !== bet) icon.style.filter = "grayscale(1)"; else icon.style.filter = "none";
+            }, 200);
+        }
+
         function createSnow() {
             const container = document.getElementById('snow-container');
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 40; i++) {
                 const snow = document.createElement('div');
                 snow.className = 'snowflake';
-                const size = Math.random() * 4 + 2 + 'px';
+                const size = Math.random() * 3 + 1 + 'px';
                 snow.style.width = size;
                 snow.style.height = size;
                 snow.style.left = Math.random() * 100 + 'vw';
-                snow.style.animation = `fall ${Math.random() * 5 + 5}s linear infinite`;
-                snow.style.animationDelay = `-${Math.random() * 10}s`;
+                snow.style.top = '-10px';
+                snow.style.animation = `fall ${Math.random() * 10 + 10}s linear infinite`;
+                snow.style.animationDelay = `-${Math.random() * 20}s`;
                 container.appendChild(snow);
             }
         }
 
-        // Инициализация
-        window.onload = () => {
-            router('home');
-            createSnow();
-        }
+        window.onload = () => { router('home'); createSnow(); }
     </script>
 </body>
 </html>
