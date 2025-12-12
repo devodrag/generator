@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gen2025 | Multi-Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+            background-color: #0a0a0a;
+            color: #ededed;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: rgba(23, 23, 23, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-hover:hover {
+            background: #ffffff;
+            color: #000000;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Снежинки */
+        .snowflake {
+            position: fixed;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh); }
+        }
+
+        .active-link {
+            border-bottom: 2px solid white;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="snow-container"></div>
+
+    <div id="app" class="relative z-10 min-h-screen flex flex-col">
+        <nav class="p-6 flex justify-center gap-8 border-b border-white/5 bg-black/50 sticky top-0 backdrop-blur-md">
+            <button onclick="router('home')" class="hover:text-white transition">Главная</button>
+            <button onclick="router('number')" class="hover:text-white transition">Числа</button>
+            <button onclick="router('names')" class="hover:text-white transition">Имена</button>
+            <button onclick="router('cards')" class="hover:text-white transition">Карты</button>
+            <button onclick="router('coin')" class="hover:text-white transition">Монетка</button>
+        </nav>
+
+        <main class="flex-grow flex items-center justify-center p-4">
+            <div id="content" class="w-full max-w-2xl">
+                </div>
+        </main>
+
+        <footer class="p-8 text-center text-white/20 text-sm">
+            &copy; 2025 Minimalist Gen. Developed for GitHub.
+        </footer>
+    </div>
+
+    <script>
+        // --- ДВИЖОК РОУТИНГА ---
+        function router(path) {
+            const content = document.getElementById('content');
+            window.history.pushState({}, '', `#${path}`);
+            
+            switch(path) {
+                case 'number': content.innerHTML = renderNumberGen(); break;
+                case 'names': content.innerHTML = renderNamesGen(); break;
+                case 'cards': content.innerHTML = renderCardsGen(); break;
+                case 'coin': content.innerHTML = renderCoinGen(); break;
+                default: content.innerHTML = renderHome();
+            }
+        }
+
+        // --- ГЕНЕРАТОРЫ ЛОГИКА ---
+        const getRandom = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        // --- ШАБЛОНЫ СТРАНИЦ ---
+        function renderHome() {
+            return `
+                <div class="text-center">
+                    <h1 class="text-5xl font-light mb-6">Gen<span class="font-semibold">2025</span></h1>
+                    <p class="text-white/50 mb-12">Выберите инструмент для генерации данных</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div onclick="router('number')" class="glass-card p-6 cursor-pointer hover:bg-white/5">Числа</div>
+                        <div onclick="router('names')" class="glass-card p-6 cursor-pointer hover:bg-white/5">Имена</div>
+                        <div onclick="router('cards')" class="glass-card p-6 cursor-pointer hover:bg-white/5">Карты</div>
+                        <div onclick="router('coin')" class="glass-card p-6 cursor-pointer hover:bg-white/5">Монетка</div>
+                    </div>
+                </div>`;
+        }
+
+        function renderNumberGen() {
+            return `
+                <div class="glass-card p-8 text-center">
+                    <h2 class="text-2xl mb-6">Генератор чисел</h2>
+                    <input id="minNum" type="number" placeholder="От" class="bg-white/5 border border-white/10 p-3 rounded-lg mb-4 w-full">
+                    <input id="maxNum" type="number" placeholder="До" class="bg-white/5 border border-white/10 p-3 rounded-lg mb-6 w-full">
+                    <div id="resNum" class="text-4xl font-bold mb-6 text-white">-</div>
+                    <button onclick="generateNumber()" class="w-full py-4 rounded-xl bg-white text-black font-semibold btn-hover uppercase tracking-widest">Сгенерировать</button>
+                </div>`;
+        }
+
+        function renderCoinGen() {
+            return `
+                <div class="glass-card p-8 text-center">
+                    <h2 class="text-2xl mb-6">Подброс монетки</h2>
+                    <div class="flex gap-4 mb-8">
+                        <button onclick="bet('Орел')" class="flex-1 p-3 border border-white/10 rounded-lg hover:bg-white/5 transition">Орел</button>
+                        <button onclick="bet('Решка')" class="flex-1 p-3 border border-white/10 rounded-lg hover:bg-white/5 transition">Решка</button>
+                        <button onclick="bet('Ребро')" class="flex-1 p-3 border border-white/10 rounded-lg hover:bg-white/5 transition">Ребро</button>
+                    </div>
+                    <div id="coinRes" class="text-5xl mb-8">🪙</div>
+                    <div id="coinStatus" class="text-white/50">Сделайте ставку</div>
+                </div>`;
+        }
+
+        function renderCardsGen() {
+            return `
+                <div class="glass-card p-8">
+                    <h2 class="text-2xl mb-6 text-center">Генератор карт</h2>
+                    <select id="cardType" class="bg-white/5 border border-white/10 p-3 rounded-lg mb-4 w-full">
+                        <option value="Visa">Visa</option>
+                        <option value="Mastercard">Mastercard</option>
+                        <option value="МИР">МИР</option>
+                    </select>
+                    <div id="cardDisplay" class="bg-gradient-to-br from-zinc-800 to-black p-6 rounded-2xl border border-white/10 aspect-[1.6/1] mb-6 flex flex-col justify-between">
+                        <div id="dispType" class="italic font-bold opacity-50 text-xl">CARD</div>
+                        <div id="dispNum" class="text-2xl tracking-widest">**** **** **** ****</div>
+                        <div class="flex justify-between">
+                            <span>Balance: <span id="dispBalance">$0</span></span>
+                            <span>Exp: 12/28</span>
+                        </div>
+                    </div>
+                    <button onclick="genCard()" class="w-full py-4 rounded-xl bg-white text-black font-semibold btn-hover">СОЗДАТЬ КАРТУ</button>
+                </div>`;
+        }
+
+        // --- ФУНКЦИИ ГЕНЕРАЦИИ ---
+        function generateNumber() {
+            const min = parseInt(document.getElementById('minNum').value) || 0;
+            const max = parseInt(document.getElementById('maxNum').value) || 100;
+            document.getElementById('resNum').innerText = getRandom(min, max);
+        }
+
+        function bet(userChoice) {
+            const status = document.getElementById('coinStatus');
+            const res = document.getElementById('coinRes');
+            const rand = Math.random();
+            let final;
+
+            if (rand < 0.48) final = 'Орел';
+            else if (rand < 0.96) final = 'Решка';
+            else final = 'Ребро';
+
+            res.classList.add('animate-bounce');
+            setTimeout(() => {
+                res.classList.remove('animate-bounce');
+                res.innerText = final === 'Орел' ? '🦅' : final === 'Решка' ? '🪙' : '📐';
+                status.innerText = (userChoice === final) ? `Вы выиграли! Это ${final}` : `Проигрыш! Это ${final}`;
+            }, 500);
+        }
+
+        function genCard() {
+            const type = document.getElementById('cardType').value;
+            const balance = getRandom(100, 1000);
+            const num = Array.from({length: 4}, () => getRandom(1000, 9999)).join(' ');
+            
+            document.getElementById('dispType').innerText = type;
+            document.getElementById('dispNum').innerText = num;
+            document.getElementById('dispBalance').innerText = `$${balance}`;
+        }
+
+        // --- ЭФФЕКТ СНЕГА ---
+        function createSnow() {
+            const container = document.getElementById('snow-container');
+            for (let i = 0; i < 50; i++) {
+                const snow = document.createElement('div');
+                snow.className = 'snowflake';
+                const size = Math.random() * 4 + 2 + 'px';
+                snow.style.width = size;
+                snow.style.height = size;
+                snow.style.left = Math.random() * 100 + 'vw';
+                snow.style.animation = `fall ${Math.random() * 5 + 5}s linear infinite`;
+                snow.style.animationDelay = `-${Math.random() * 10}s`;
+                container.appendChild(snow);
+            }
+        }
+
+        // Инициализация
+        window.onload = () => {
+            router('home');
+            createSnow();
+        }
+    </script>
+</body>
+</html>
